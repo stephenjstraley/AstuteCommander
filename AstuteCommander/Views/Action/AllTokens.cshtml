@@ -1,0 +1,93 @@
+﻿<h3>Tokens</h3>
+
+
+@(
+Html.Kendo()
+    .Grid<AstuteCommander.Models.TokenVM>()
+    .Name("TokensGrid")
+    .ToolBar(toolBar => toolBar.ClientTemplateId("tokentoolbar"))
+    .Columns(c =>
+    {
+        //c.Group(gr => gr
+        //  .Title("Repository")
+        //  .Columns(info =>
+        //  {
+        //      info.Bound(xxx => xxx.SourceFile);
+        //  })
+        //  );
+        c.Bound(p => p.Environment).Width(40);
+        c.Bound(p => p.Token);
+        c.Bound(p => p.TokenValue);
+    })
+    //.AutoBind(false)
+    .Groupable(true)
+    .Pageable(pageable => pageable
+                .Refresh(true)
+                .PageSizes(new[] { 10, 20, 50, 100, 500, 1000, 2000, 5000, 10000, 20000 })
+            )
+    .DataSource
+        (dataSource => dataSource
+         .Ajax()
+         .PageSize(1000)
+         .Group(g => g.Add(c => c.RepoName))
+         .Read(read => read.Action("GatherTokens", "Action"))
+         //.ServerOperation(false)
+         //.Events(e => e.Error("onError"))
+         )
+        .Resizable(re => re.Columns(true))
+
+)
+
+
+<script type="text/x-kendo-template" id="tokentoolbar">
+    <label class="search-label"
+           for="searchBox">Find:</label>
+
+    <input type="search"
+           id="searchBox"
+           class="k-textbox"
+           style="width: 200px;" />
+
+    <button type="button"
+            id="btnFindToken"
+            class="btn btn-info">
+        <i class="fa fa-search"></i>
+    </button>
+
+    <button type="button"
+            id="btnClearFindToken"
+            class="btn btn-info">
+        <i class="fa fa-eraser"></i>
+    </button>
+
+</script>
+
+<script>
+    $(document).ready(function () {
+
+//        var grid = $("#Repos").data("kendoGrid");
+//        var wrapper = $('<div class="k-pager-wrap k-grid-pager pagerTop"/>').insertBefore(grid.element.children(".k-grid-header"));
+//        grid.pagerTop = new kendo.ui.Pager(wrapper, $.extend({}, grid.options.pageable, { dataSource: grid.dataSource }));
+//        grid.element.height("").find(".pagerTop").css("border-width", "0 0 1px 0");
+
+        $("#btnFindToken").click(function () {
+            var searchValue = $('#searchBox').val();
+
+            $("#TokensGrid").data("kendoGrid").dataSource.filter({
+                logic: "or",
+
+                filters: [
+                    { field: "Token", operator: "contains", value: searchValue },
+                    { field: "TokenValue", operator: "contains", value: searchValue }
+                ]
+            });
+        });
+
+        $("#btnClearFindToken").click(function () {
+            $("#TokensGrid").data("kendoGrid").dataSource.filter({});
+            $('#searchBox').val('');
+        })
+
+
+    })
+</script>

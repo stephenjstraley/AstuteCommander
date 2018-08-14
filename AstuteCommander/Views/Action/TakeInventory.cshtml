@@ -1,0 +1,137 @@
+﻿<h3>Inventory</h3>
+
+@(
+Html.Kendo()
+    .Grid<AstuteCommander.Models.InventoryVM>()
+    .Name("InventoryGrid")
+    .ToolBar(toolBar => toolBar.ClientTemplateId("inventorytoolbar"))
+    .Columns(c =>
+    {
+//        c.Bound(p => p.Repository).Visible(false);
+        c.Bound(p => p.Extension).Width(70);
+        c.Bound(p => p.OtherFile).Width(400);
+        c.Bound(p => p.FileCount).Width(80);
+        c.Bound(p => p.TotalLines).Width(80);
+    })
+    //.Groupable(true)
+//        .Pageable
+//        (pageable => pageable
+//            .Refresh(true)
+//            .PageSizes(new[] { 10, 20, 50, 100 })
+//        )
+    .DataSource
+        (dataSource => dataSource
+            .Ajax()
+            .Group(g => g.Add(c => c.Repository))
+            //            .PageSize(50)
+            .Read(read => read.Action("GetInventory", "Action"))
+            .ServerOperation(false)
+            .Events(e => e.Error("onError"))
+         )
+        .Resizable(re => re.Columns(true))
+
+)
+
+<script type="text/x-kendo-template" id="inventorytoolbar">
+    <button type="button"
+            id="btnCollapseAllGroup"
+            onclick="collapseAll()"
+            class="btn btn-info">
+        <i class="fa fa-caret-up fa-fw"></i>
+    </button>
+
+    <button type="button"
+            id="btnExpandAllGroup"
+            onclick="expandAll()"
+            class="btn btn-info">
+        <i class="fa fa-caret-down fa-fw"></i>
+    </button>
+    <button type="button"
+            id="btnPrint"
+            onclick="printGrid()"
+            class="btn btn-info">
+        <i class="fa fa-print fa-fw"></i>
+    </button>
+
+
+</script>
+
+<script type="text/javascript">
+    var times = 0;
+    function collapseAll() {
+        $("#InventoryGrid").find(".k-icon.k-i-collapse").trigger("click");
+    }
+
+    function expandAll() {
+        $("#InventoryGrid").find(".k-icon.k-i-expand").trigger("click");
+    }
+
+    function onError(e) {
+        if (e.status == "error") {
+            if (times < 5) {
+                times = times + 1;
+                console.log(e);
+                console.log(times);
+                $("#InventoryGrid").data("kendoGrid").dataSource.read();
+                $("#InventoryGrid").data("kendoGrid").refresh();
+                $("#InventoryGrid").data("kendoGrid").dataSource.sync();
+            }
+        }
+    }
+
+    function printGrid() {
+        var gridElement = $('#InventoryGrid'),
+            printableContent = '',
+            win = window.open('', '', 'width=800, height=500, resizable=1, scrollbars=1'),
+            doc = win.document.open();
+
+        var htmlStart =
+            '<!DOCTYPE html>' +
+            '<html>' +
+            '<head>' +
+            '<meta charset="utf-8" />' +
+            '<title>Kendo UI Grid</title>' +
+            '<link href="/css/kendo/kendo.common-material.min.css" rel="stylesheet" type="text/css" />' +
+            //'<link href="http://kendo.cdn.telerik.com/' + kendo.version + '/styles/kendo.common.min.css" rel="stylesheet" /> ' +
+            '<style>' +
+            'html { font: 11pt sans-serif; }' +
+            '.k-grid { border-top-width: 0; }' +
+            '.k-grid, .k-grid-content { height: auto !important; }' +
+            '.k-grid-content { overflow: visible !important; }' +
+            'div.k-grid table { table-layout: auto; width: 100% !important; }' +
+            '.k-grid .k-grid-header th { border-top: 1px solid; }' +
+            '.k-grouping-header, .k-grid-toolbar, .k-grid-pager > .k-link { display: none; }' +
+            // '.k-grid-pager { display: none; }' + // optional: hide the whole pager
+            '</style>' +
+            '</head>' +
+            '<body>';
+
+        var htmlEnd =
+            '</body>' +
+            '</html>';
+
+        var gridHeader = gridElement.children('.k-grid-header');
+        if (gridHeader[0]) {
+            var thead = gridHeader.find('thead').clone().addClass('k-grid-header');
+            printableContent = gridElement
+                .clone()
+                .children('.k-grid-header').remove()
+                .end()
+                .children('.k-grid-content')
+                .find('table')
+                .first()
+                .children('tbody').before(thead)
+                .end()
+                .end()
+                .end()
+                .end()[0].outerHTML;
+        } else {
+            printableContent = gridElement.clone()[0].outerHTML;
+        }
+
+        doc.write(htmlStart + printableContent + htmlEnd);
+        doc.close();
+        //win.print();
+    }
+
+</script>

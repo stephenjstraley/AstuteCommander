@@ -1,0 +1,34 @@
+﻿@using AstuteCommander.Models
+
+@(
+Html.Kendo()
+    .Grid<RepoReleaseDefinitionVM>()
+    .Name("releasedetailgrid_" + (string)ViewBag.ReleaseId)
+    .Columns(col =>
+    {
+        col.Bound(c => c.Id).Visible(false);
+        col.Bound(c => c.CreatedOn).Format("{0:MM-dd-yyyy hh:ss}").Width(150);
+        col.Bound(c => c.ModifiedOn).Format("{0:MM-dd-yyyy hh:ss}").Width(150);
+        col.Bound(c => c.Revisions).Width(100);
+        col.Command(com => com.Custom("CreateBMR").IconClass("fa fa-download fa-fw").Text(" ").Click("CreateBMRTemplate").HtmlAttributes(new { @class = "pullRepo" })).Width(75);
+    })
+    .Selectable()
+           .DataSource(dataSource => dataSource
+       .Ajax()
+       .Read("GetReleaseDefinition", "Repository", new { id = (string)ViewBag.ReleaseId })
+        )
+)
+
+@(
+Html.Kendo()
+    .TabStrip()
+    .Name("tabreleasestrip_" + (string)ViewBag.ReleaseId)
+    .Items(j =>
+    {
+        j.Add().Text("Releases").LoadContentFrom("RepoReleaseReleases", "Repository", new { releaseid = (string)ViewBag.ReleaseId });
+        j.Add().Text("Environments").LoadContentFrom("RepoReleaseEnvironments", "Repository", new { releaseid = (string)ViewBag.ReleaseId });
+        j.Add().Text("Tokens").LoadContentFrom("RepoReleaseTokens", "Repository", new { releaseid = (string)ViewBag.ReleaseId });
+        //j.Add().Text("Workflows").LoadContentFrom("RepoReleaseWorkflows", "Repository", new { releaseid = (string)ViewBag.ReleaseId });
+    })
+)
+

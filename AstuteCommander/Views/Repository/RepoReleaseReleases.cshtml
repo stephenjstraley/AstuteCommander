@@ -1,0 +1,39 @@
+﻿@using AstuteCommander.Models;
+
+@(
+Html.Kendo()
+    .Grid<RepoReleaseVM>()
+    .ToolBar(toolBar => toolBar.ClientTemplateId("releasegridtoolbar"))
+    .Name("releasesgrid_" + (string)ViewBag.ReleaseId)
+    .Columns(col =>
+    {
+        col.Bound(c => c.Id).Visible(false);
+        col.Bound(c => c.Name).Width(110);
+        col.Bound(c => c.Status).Width(80);
+        col.Bound(c => c.CreatedOn).Format("{0:MM-dd-yyyy hh:ss}").Width(100);
+        col.Bound(c => c.Description).Width(400);
+        col.Command(com => com.Custom("VSTSBuilt").IconClass("fa fa-link fa-fw").Text("VSTS").Click("VstsItemLink").HtmlAttributes(new { @class = "checkOut" })).Width(70);
+    })
+    .Selectable()
+           .DataSource(dataSource => dataSource
+       .Ajax()
+       .Read("GetReleasesForDefinition", "Repository", new { defId = (string)ViewBag.ReleaseId })
+        )
+        .Resizable(re => re.Columns(true))
+)
+
+<script type="text/x-kendo-template" id="releasegridtoolbar">
+    <button type="button"
+            id="btnRefreshBuild"
+            onClick="RefreshGrid('releasesgrid_@ViewBag.ReleaseId')"
+            class="btn btn-info">
+        <i class="fa fa-refresh fa-fw"></i>Refresh
+    </button>
+
+    <button type="button"
+        id="btnVstsReleases"
+        onclick="VstsAllReleases(@ViewBag.ReleaseId)"
+        class="btn btn-info">
+        <i class="fa fa-link fa-fw"></i>VSTS
+    </button>
+</script>

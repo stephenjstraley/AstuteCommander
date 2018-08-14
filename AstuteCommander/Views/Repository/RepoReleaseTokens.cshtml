@@ -1,0 +1,27 @@
+﻿@model AstuteCommander.Models.RepoReleaseVariableVM
+
+@(
+Html.Kendo()
+    .Grid<dynamic>()
+    .Name("releasestokengrid_" + (string)ViewBag.ReleaseId)
+    .Columns(col =>
+    {
+        foreach (VSTSDataColumn item in Model.Columns)
+        {
+            col.Bound(item.ColumnName)
+               .Title(item.Caption)
+               .Width(300)
+               .Locked(item.IsLocked);
+        }
+    })
+    .Scrollable()
+    .Selectable()
+    .Resizable(re => re.Columns(true))
+           .DataSource(dataSource => dataSource
+       .Ajax()
+        .Read(read =>
+            read.Action("GetVariablesForDefinition",
+                         "Repository",
+                         new { releaseid = (string)ViewBag.ReleaseId }))
+        )
+)

@@ -1,0 +1,64 @@
+﻿@model AstuteCommander.Models.LoginVM
+
+<div class="row">
+    <h3>Login Please</h3>
+    <hr />
+    <form method="post" novalidate>
+
+        <div class="form-group">
+            @*<lbl for="@Model.UserName" class="col-md-2">User Name</lbl>*@
+            <textbox for="@Model.UserName" width="200" />
+            <validate for="@Model.UserName" />
+        </div>
+
+        @*<div class="form-group">
+            <lbl for="@Model.Password" class="col-md-2">Password</lbl>
+            <password for="@Model.Password" width="200" />
+            <validate for="@Model.Password" />
+        </div>*@
+
+        @*<div class="form-group">
+            <lbl for="@Model.PersonalAccessToken" class="col-md-2">Personal Access Token</lbl>
+            <textbox for="@Model.PersonalAccessToken" width="500" place-holder="sksf7bfglyb5n65wm7csutpnrmxg4kxwdz7b66v6asazp56pgt7q" />
+            <validate for="@Model.PersonalAccessToken" />
+        </div>*@
+
+        <div class="form-group col-md-offset-1">
+            <input type="submit" id="Submit" value="Login" class="btn btn-success" />
+        </div>
+    </form>
+</div>
+
+<script>
+    $(document).ready(function () {
+
+        var hasLocal = function () {
+            try {
+                var storTest = window['localStorage'];
+                storTest.setItem("", ".");
+                storTest.removeItem("");
+                return true;
+            }
+            catch (e) { return false; }
+        }
+
+        if (hasLocal) {
+            var localData = window['localStorage'];
+            var user = localData.getItem("userName");
+            //alert(user);
+            document.getElementById('UserName').value = localData.getItem("userName");
+            document.getElementById('Password').value = localData.getItem("password");
+            document.getElementById('PersonalAccessToken').value = localData.getItem("token");
+        }
+
+        $("#Submit").click(function () {
+            if (hasLocal) {
+                var storeData = window['localStorage'];
+                storeData.setItem("userName", document.getElementById('UserName').value);
+                storeData.setItem("password", document.getElementById('Password').value);
+                storeData.setItem("token", document.getElementById('PersonalAccessToken').value);
+                //alert("In here");
+            }            
+        });
+    });
+</script>

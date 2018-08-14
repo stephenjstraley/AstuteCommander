@@ -1,0 +1,292 @@
+﻿<h3>Search</h3>
+
+<button type="button"
+        id="btnSetGitBase"
+        class="btn btn-info">
+    <i class="fa fa-gears"></i>
+</button>
+
+
+@(Html.Kendo().ProgressBar()
+                  .Name("progressBar")
+                  .Min(0)
+                  .Max((int)ViewBag.RepoCount)
+                  .Type(ProgressBarType.Value)
+                  .ShowStatus(false)
+)
+
+<div id="window"></div>
+
+<div class="clearfix" style="background-color:cornflowerblue; overflow:auto">
+    <label class="search-label"
+           for="fileType">File Types:</label>
+
+    <input type="search"
+           id="fileType"
+           class="k-textbox"
+           style="width: 300px;" />
+
+    <label class="search-label"
+           for="searchBox">Find:</label>
+
+    <input type="search"
+           id="searchBox"
+           class="k-textbox"
+           style="width: 400px;" />
+
+    <button type="button"
+            id="btnSearchSource"
+            class="btn btn-info">
+        <i class="fa fa-search"></i>
+    </button>
+
+    <button type="button"
+            id="btnClearSearchSource"
+            class="btn btn-info">
+        <i class="fa fa-eraser"></i>
+    </button>
+
+    <input type="checkbox" name="wholeword" id="wholeword" style="width: 20px; height: 20px" />
+    <label for="wholeword">Whole Words</label>
+    <input type="checkbox" name="matchcase" id="matchcase" style="width: 20px; height: 20px" />
+    <label for="matchcase">Match Case</label>
+
+    <button type="button"
+            id="btnPrint"
+            onclick="printGrid()"
+            class="btn btn-info">
+        <i class="fa fa-print fa-fw"></i>
+    </button>
+
+    <br />
+
+    <label class="exclusde-label"
+           for="fileType">Exclude Text:</label>
+
+    <input type="search"
+           id="excludeBox"
+           class="k-textbox"
+           style="width: 400px;" />
+</div>
+
+@(
+            Html.Kendo()
+                .Grid<AstuteCommander.Models.SearchItemsVM>()
+                .Name("FileTypeSearchGrid")
+                //.ToolBar(toolBar => toolBar.ClientTemplateId("searchtoolbar"))
+                .ToolBar(t => t.Excel())
+                .Columns(c =>
+                {
+                    c.Bound(p => p.Line).Width(40);
+                    c.Bound(p => p.Content);
+                    c.Command(com => com.Custom("ViewTheSource").IconClass("fa fa-view fa-fw").Text(" ").Click("ViewSource").HtmlAttributes(new { @class = "pullRepo" })).Width(60);
+                })
+                .AutoBind(false)
+                .Groupable(true)
+                .Excel(excel => excel
+                     .FileName("MyKendoXls.xlsx")
+                     .Filterable(true)
+                     .ProxyURL(Url.Action("Excel_Export_Save", "Action"))
+                    )
+                .Pageable(pageable => pageable
+                            .Refresh(true)
+                            .PageSizes(new[] { 10, 20, 50, 100, 500, 1000, 2000, 5000, 10000 })
+                        )
+                .DataSource
+                    (dataSource => dataSource
+                     .Ajax()
+                     .PageSize(100)
+                     .Group(g => g.Add(c => c.Repository))
+                        .Group(g => g.Add(c => c.SourceFile))
+                     .Read(read => read.Action("PerformFileTypeSearch", "Action"))
+                     //.ServerOperation(false)
+                     .Events(e => e.Error("onError"))
+                     )
+                    .Resizable(re => re.Columns(true))
+
+)
+
+
+<script>
+    $(document).ready(function () {
+
+        $("#btnSearchSource").click(function () {
+            var searchValue = $('#searchBox').val();
+            var theFileTypes = $('#fileType').val();
+            var excludedText = $('#excludeBox').val(); 
+            var wholeSource = document.getElementById("wholeword").checked;
+            var matchCase = document.getElementById("matchcase").checked;
+
+            //var grid = $('#' + gridName).data("kendoGrid");
+            var grid = $('#FileTypeSearchGrid').data("kendoGrid");
+            grid.dataSource.read({ filetypes: theFileTypes, search: searchValue, whole: wholeSource, case: matchCase, excludedText: excludedText });
+
+        });
+
+    })
+    function AddCallToQueue(fictitousName, repoPosition) {
+        $(document).queue(fictitousName, function () {
+            $.ajax({
+                type: 'POST',
+                async: true,
+                url: '@Url.Action("SetGitBranch", "Action")',
+                dataType: 'json',
+                data: { pos: repoPosition },
+                success: function (result) {
+
+                    if (result.Success) {
+                        //do the progress++
+                        // activate the next ajax call when this one finishes
+
+                        var pb = $("#progressBar").data("kendoProgressBar");
+                        pb.value(repoPosition + 1);
+
+                        $(document).dequeue(fictitousName);
+                    }
+                    else {
+                        alert(result.message);
+                        $("#btnSetGitBase").removeClass("k-state-disabled");
+                    }
+
+                    if (repoPosition + 1 == Number(@(ViewBag.RepoCount))) {
+                        $("#btnSetGitBase").removeClass("k-state-disabled");
+                    }
+
+                }
+            });
+        });
+    }
+
+    $("#btnSetGitBase").click(function () {
+            if (!$(this).hasClass("k-state-disabled")) {
+                $(this).addClass("k-state-disabled");
+
+                var repoCount = Number(@(ViewBag.RepoCount));
+
+                var pb = $("#progressBar").data("kendoProgressBar");
+                pb.value(0);
+
+                var queue_name = 'temp_queue';
+
+                for (i = 0; i < repoCount; i++) {
+                    AddCallToQueue(queue_name, i)
+                }
+
+                $(document).dequeue(queue_name);
+                }
+            });
+
+</script>
+
+<script type="text/javascript">
+    function onError(e) {
+        if (e.errors) {
+            var message = "Errors:\n";
+            $.each(e.errors, function (key, value) {
+                if ('errors' in value) {
+                    $.each(value.errors, function () {
+                        message += this + "\n";
+                    });
+                }
+            });
+            alert(message);
+        }
+    }
+
+    function ViewSource(e) {
+
+        //        var grid = $("#Repos").data("kendoGrid")
+        //        var selectedItem = grid.select();
+
+        //var selectedItem = grid.dataItem(grid.select());
+
+
+        var dataItem = this.dataItem($(e.currentTarget).closest("tr"));
+        var fileName = dataItem.SourceFile;
+
+        //alert(fileName);
+
+        //var guid = dataItem.Guid;
+
+        var myWindow = $("#window");
+
+        //myWindow.text('<h2><div id="editor">One moment....</div></h2>');
+
+        myWindow.kendoWindow({
+            width: "815px",
+            height: "700px",
+            title: fileName,
+            content: {
+                url: "/Action/ViewFileSource",
+                data: { file: fileName }
+            }
+        }).data("kendoWindow").center().open();
+    }
+
+//    function readTextFile(file) {
+//        jQuery.get(file, function (data) {
+//            alert(data);
+//        });
+//    }
+
+    function printGrid() {
+        var gridElement = $('#FileTypeSearchGrid'),
+            printableContent = '',
+            win = window.open('', '', 'width=800, height=500, resizable=1, scrollbars=1'),
+            doc = win.document.open();
+
+        var htmlStart =
+            '<!DOCTYPE html>' +
+            '<html>' +
+            '<head>' +
+            '<meta charset="utf-8" />' +
+            '<title>Kendo UI Grid</title>' +
+            '<link href="/css/kendo/kendo.common-material.min.css" rel="stylesheet" type="text/css" />' +
+            //'<link href="http://kendo.cdn.telerik.com/' + kendo.version + '/styles/kendo.common.min.css" rel="stylesheet" /> ' +
+            '<style>' +
+            'html { font: 11pt sans-serif; }' +
+            '.k-grid { border-top-width: 0; }' +
+            '.k-grid, .k-grid-content { height: auto !important; }' +
+            '.k-grid-content { overflow: visible !important; }' +
+            'div.k-grid table { table-layout: auto; width: 100% !important; }' +
+            '.k-grid .k-grid-header th { border-top: 1px solid; }' +
+            '.k-grouping-header, .k-grid-toolbar, .k-grid-pager > .k-link { display: none; }' +
+            // '.k-grid-pager { display: none; }' + // optional: hide the whole pager
+            '</style>' +
+            '</head>' +
+            '<body>';
+
+        var htmlEnd =
+            '</body>' +
+            '</html>';
+
+        var gridHeader = gridElement.children('.k-grid-header');
+        if (gridHeader[0]) {
+            var thead = gridHeader.find('thead').clone().addClass('k-grid-header');
+            printableContent = gridElement
+                .clone()
+                .children('.k-grid-header').remove()
+                .end()
+                .children('.k-grid-content')
+                .find('table')
+                .first()
+                .children('tbody').before(thead)
+                .end()
+                .end()
+                .end()
+                .end()[0].outerHTML;
+        } else {
+            printableContent = gridElement.clone()[0].outerHTML;
+        }
+
+        doc.write(htmlStart + printableContent + htmlEnd);
+        doc.close();
+        //win.print();
+    }
+</script>
+
+<style>
+    .k-progressbar {
+        width: 100%;
+    }
+</style>

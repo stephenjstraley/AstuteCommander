@@ -1,0 +1,31 @@
+﻿@using AstuteCommander.Models;
+<div>
+    @(
+    Html.Kendo()
+       .Grid<RepoPullRequestVM>()
+       .Name("PullRequestGrid_" + (string)ViewBag.GUID)
+       .Columns(col =>
+       {
+           col.Bound(c => c.Number);
+           col.Bound(c => c.CreatedBy);
+           col.Bound(c => c.Title).Width(400);
+           col.Bound(c => c.Status);
+           col.Bound(c => c.SourceBranch);
+           col.Bound(c => c.TargetBranch);
+           col.Bound(c => c.MergeStatus);
+           col.Bound(c => c.WorkItems);
+       })
+       .Selectable()
+       .DataSource(dataSource => dataSource
+       .Ajax()
+       .Model(m =>
+       {
+           m.Id(p => p.Number);
+           m.Id(p => p.Title);
+       })
+       .Read("GetRepoPullRequests", "Repository", new { id = (string)ViewBag.GUID })
+        )
+        .Resizable(re => re.Columns(true))
+        .Scrollable(sc => sc.Height(400))
+    )
+</div>

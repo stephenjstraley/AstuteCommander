@@ -1,0 +1,654 @@
+﻿@using AstuteCommander.Classes
+
+@{
+    var col = Raz.Div("info") +
+              Raz.DD("dfquid", "Guid", "Guid") +
+              Raz.DDLink("Url") +
+              Raz.Div();
+
+    var yesCol = Raz.Div("yesno") +
+                 Raz.Img("/images/yes.png", 40, 40) +
+                 Raz.Div();
+
+    var noCol = Raz.Div("yesno") +
+                Raz.Img("/images/no.png", 40, 40) +
+                Raz.Div();
+
+    var conditional = 
+         "# if (DirectoryOnDisk) { # " + yesCol + "# } else { #" + noCol + "# } # ";
+
+}
+
+<h1>@ViewBag.Project</h1>
+
+@(Html.Kendo().ProgressBar()
+              .Name("progressBar")
+              .Min(0)
+              .Max((int)ViewBag.RepoCount)
+              .Type(ProgressBarType.Value)
+              .ShowStatus(false)
+)
+
+
+@(
+Html.Kendo()
+    .Grid<AstuteCommander.Models.RepositoryVM>()
+    .Name("Repos")
+    .ToolBar(toolBar => toolBar.ClientTemplateId("maingridtoolbar"))
+    .Columns(columns =>
+    {
+        columns.Bound(p => p.Guid).Visible(false);
+        columns.Bound(p => p.Name).Title("Repository").Width(175);
+        columns.Bound(p => p.DefaultBranch).ClientTemplate(@col).Title(" ").Width(400);
+        columns.Bound(p => p.DirectoryOnDisk).ClientTemplate(@conditional).Title(" ").Width(40);
+        columns.Command(com => com.Custom("PullIndividualRepo").IconClass("fa fa-download fa-fw").Text(" ").Click("CallForPull").HtmlAttributes(new { @class = "pullRepo" })).Width(55);
+        columns.Command(com => com.Custom("DeleteIndividualRepo").IconClass("fa fa-code fa-fw").Text(" ").Click("CallToDelete").HtmlAttributes(new { @class = "pullRepo" })).Width(55);
+        columns.Command(com => com.Edit().Text("FB")).Width(55);
+    })
+    .Pageable
+        (pageable => pageable
+            .Refresh(true)
+            .PageSizes(new[] { 10, 20, 50, 100 })
+        )
+    .Editable(e => e.Mode(GridEditMode.PopUp).TemplateName("CreateFeatureBranch").Window(w => w.Width(600).Title("Create")))
+    .Sortable()
+    .Scrollable(s => s.Height(800))
+    .Filterable()
+    .AllowCopy(true)
+    .ClientDetailTemplateId("Repo_TabDetail")
+    .DataSource
+        (dataSource => dataSource
+            .Ajax()
+            .PageSize(50)
+            .Events(events => events.RequestEnd("FeatureBranchEnded"))
+            .Model(m =>
+            {
+                m.Id(p => p.Guid);
+                m.Field(p => p.Name);
+                m.Field(p => p.DirectoryOnDisk);
+            }
+            )
+            .Read(read => read.Action("GetRepos", "Repository", new { projectName = (string)ViewBag.Project }))
+            .Update(up => up.Action("MakeFeatureBranch", "Repository"))
+        )
+        .Resizable(re => re.Columns(true))
+)
+
+<script type="text/x-kendo-template" id="maingridtoolbar">
+    <button type="button"
+            id="btnBuilds"
+            onclick="location.href='@Url.Action("RebuildBuildDefinitions", "Repository")'"
+            class="btn btn-danger">
+        <i class="fa fa-tasks fa-fw"></i>BDL
+    </button>
+
+    <button type="button"
+            id="btnReleases"
+            onclick="location.href='@Url.Action("RebuildReleaseDefinitions", "Repository")'"
+            class="btn btn-danger">
+        <i class="fa fa-tasks fa-fw"></i>RDL
+    </button>
+
+    <label class="search-label"
+           for="searAchBox">Find:</label>
+
+    <input type="search"
+           id="searchBox"
+           class="k-textbox"
+           style="width: 200px;" />
+
+    <button type="button"
+            id="btnFindRepo"
+            class="btn btn-info">
+        <i class="fa fa-search"></i>
+    </button>
+
+    <button type="button"
+            id="btnClearFindRepo"
+            class="btn btn-info">
+        <i class="fa fa-eraser"></i>
+    </button>
+
+
+
+
+
+    <label class="search-label"
+           for="PbiBox">PBI:</label>
+
+    <input type="search"
+           id="pbiBox"
+           class="k-textbox"
+           style="width: 200px;" />
+
+    <button type="button"
+            id="btnFindPbi"
+            class="btn btn-info">
+        <i class="fa fa-search"></i>
+    </button>
+
+
+
+
+
+    @*<button type="button"
+        id="btnRefreshRepos"
+        onClick="RefreshGrid('Repos')"
+        class="btn btn-info"><i class="fa fa-refresh fa-fw"></i>Refresh</button>*@
+
+    <button type="button"
+            id="btnPullAll"
+            style="float: right;"
+            class="btn btn-info">
+        <i class="fa fa-download fa-fw"></i>Pull All
+    </button>
+</script>
+
+<script id="Repo_TabDetail" type="text/x-kendo-tmpl">
+    @(
+    Html.Kendo()
+      .TabStrip()
+      .Name("tabstrip_#=Guid#")
+      .Events(events => events.Select("onSelect")
+                              .ContentLoad("contentLoaded")
+                              .Activate("activated")
+              )
+      .Items(i =>
+      {
+          i.Add().Text("Branches").LoadContentFrom("RepoBranches", "Repository", new { id = "#=Guid#" });
+          i.Add().Text("Commits").LoadContentFrom("RepoCommits", "Repository", new { id = "#=Guid#" });
+          i.Add().Text("Pull Requests").LoadContentFrom("RepoPullRequests", "Repository", new { id = "#=Guid#" });
+          i.Add().Text("Pushes").LoadContentFrom("RepoPushes", "Repository", new { id = "#=Guid#" });
+          i.Add().Text("Builds").LoadContentFrom("RepoBuilds", "Repository", new { id = "#=Guid#" });
+          i.Add().Text("Releases").LoadContentFrom("RepoReleases", "Repository", new { id = "#=Guid#" });
+
+      }).ToClientTemplate()
+    )
+</script>
+
+<script type="text/javascript">
+    var contentBuild = false;
+    var contentRelease = false;
+    var keepSessionAlive = true;
+    var actionUrl = null;
+
+    function SetupSessionUpdater(url) {
+        actionUrl = url;
+        var container = $("#body");
+        container.mousemove(function () { keepSessionAlive = true; });
+        container.keydown(function () { keepSessionAlive = true; });
+        CheckToKeepSessionAlive();
+    }
+
+    function CheckToKeepSessionAlive() {
+        setTimeout("KeepSessionAlive()", 100000);
+    }
+
+    function KeepSessionAlive() {
+//        alert(actionUrl);
+        if (keepSessionAlive && actionUrl != null) {
+//            alert("second");
+            $.ajax({
+                type: "POST",
+                url: actionUrl,
+                success: function () { keepSessionAlive = true; }
+            });
+        }
+        CheckToKeepSessionAlive();
+    }
+
+    function initChildGrid(e) {
+        var detailGrid = e.detailCell.find('>.k-grid').data().kendoGrid;
+        var dataItem = e.data;
+//alert(dataItem.Statuses);
+        detailGrid.dataSource.data(dataItem.Statuses);
+    }
+
+    function contentLoaded(e) {
+        var item = $(e.item).find("> .k-link").text();
+        if (contentBuild || contentRelease) {
+            kendo.ui.progress($(e.item), false);
+        }
+        if (item == "Builds" || item == "Releases") {
+            if (item == "Builds") {
+                contentBuild = true;
+            }
+            else {
+                contentRelease = true;
+            }
+
+            kendo.ui.progress($(e.item), false);
+        }
+    }
+
+    function activated(e) {
+        var item = $(e.item).find("> .k-link").text();
+        if (item == "Builds" || item == "Releases") {
+            kendo.ui.progress($(e.item), false);
+        }
+
+    }
+
+    function onSelect(e) {
+        var item = $(e.item).find("> .k-link").text();
+        if (item == "Builds" || item == "Releases") {
+            kendo.ui.progress($(e.item), true);
+        }
+    }
+
+    function CallForPull(e) {
+
+//        var grid = $("#Repos").data("kendoGrid")
+//        var selectedItem = grid.select();
+
+        //var selectedItem = grid.dataItem(grid.select());
+
+
+        var dataItem = this.dataItem($(e.currentTarget).closest("tr"));
+
+        var guid = dataItem.Guid;
+
+        $.post('/Repository/PullRepository', { 'guid': guid }, function (d) {
+            alert(d.Message);
+            if (d.Success) {
+                dataItem.DirectoryOnDisk = true;
+
+//                $('#Repos').data('kendoGrid').refresh();
+
+                var grid = $("#Repos").data("kendoGrid");
+                grid.refresh();
+
+//                grid.select(dataItem);
+//                grid.content.scrollTop(grid.select().position().top);
+            }
+        }, 'json');
+
+        //alert(dataItem);
+    }
+
+    function CallToDelete(e) {
+
+        var dataItem = this.dataItem($(e.currentTarget).closest("tr"));
+        var uid = dataItem.uid;
+        var row = $("#Repos").data("kendoGrid").table.find('tr[data-id="' + uid + '"]');
+
+        //        var tuid = row.data("uid");
+//        alert(row.html);
+//        alert(row.uid);
+
+//        alert(row);
+
+        $.post('/Repository/RemoveRepository', { 'guid': dataItem.Guid }, function (d) {
+            alert(d.Message);
+            if (d.Success) {
+                dataItem.DirectoryOnDisk = false;
+
+//                $('#Repos').data('kendoGrid').refresh();
+
+                var grid = $("#Repos").data("kendoGrid");
+                grid.refresh();
+
+                $("#Repos").select(row);
+
+                var oldrow = $("#Repos").data("kendoGrid").table.find('tr[data-id="' + uid + '"]');
+
+//                alert(oldrow.html);
+
+                oldrow.addClass('k-state-selected');
+//                row.select();
+
+//                alert(row);
+
+//                alert($("#Repos").select() == oldrow);
+
+//                grid.select(dataItem);
+//                grid.content.scrollTop(grid.select().position().top);
+
+//                var grid = $("#Repos").data("kendoGrid");
+            }
+        }, 'json');
+    }
+
+    function CreateBMRTemplate(e) {
+
+        //        var grid = $("#Repos").data("kendoGrid")
+        //        var selectedItem = grid.select();
+
+        //var selectedItem = grid.dataItem(grid.select());
+
+
+        var dataItem = this.dataItem($(e.currentTarget).closest("tr"));
+
+        var id = dataItem.Id;
+
+        $.post('/Repository/CreateBMR', { 'guid': id }, function (d) {
+        //    alert(d.Message);
+        //    if (d.Success) {
+        //        dataItem.DirectoryOnDisk = true;
+
+        //        //                $('#Repos').data('kendoGrid').refresh();
+
+        //        var grid = $("#Repos").data("kendoGrid");
+        //        grid.refresh();
+
+        //        //                grid.select(dataItem);
+        //        //                grid.content.scrollTop(grid.select().position().top);
+        //    }
+        }, 'json');
+
+        alert(id);
+    }
+
+
+
+    function kendoFastRedrawRow(grid, row) {
+        var dataItem = grid.dataItem(row);
+
+        var rowChildren = $(row).children('td[role="gridcell"]');
+
+        for (var i = 0; i < grid.columns.length; i++) {
+
+            var column = grid.columns[i];
+            var template = column.template;
+            var cell = rowChildren.eq(i);
+
+            if (template !== undefined) {
+                var kendoTemplate = kendo.template(template);
+
+                // Render using template
+                cell.html(kendoTemplate(dataItem));
+            } else {
+                var fieldValue = dataItem[column.field];
+
+                var format = column.format;
+                var values = column.values;
+
+                if (values !== undefined && values != null) {
+                    // use the text value mappings (for enums)
+                    for (var j = 0; j < values.length; j++) {
+                        var value = values[j];
+                        if (value.value == fieldValue) {
+                            cell.html(value.text);
+                            break;
+                        }
+                    }
+                } else if (format !== undefined) {
+                    // use the format
+                    cell.html(kendo.format(format, fieldValue));
+                } else {
+                    // Just dump the plain old value
+                    cell.html(fieldValue);
+                }
+            }
+        }
+    }
+    function CallForCheckout(e) {
+
+        var dataItem = this.dataItem($(e.currentTarget).closest("tr"));
+
+        var name = dataItem.Name;
+        var guid = dataItem.RepoGuid;
+
+        $.post('/Repository/CheckOutBranch', { 'name': name, 'guid': guid }, function (d) {
+            alert(d.Message);
+        }, 'json');
+    }
+
+    function VstsItemLink(e) {
+        var dataItem = this.dataItem($(e.currentTarget).closest("tr"));
+        var link = dataItem.VstsLink;
+
+        var win = window.open(link, '_blank');
+        win.focus();
+    }
+
+    function VstsAllBuilds(defId) {
+        $.ajax({
+            type: 'POST',
+            async: false,
+            url: '@Url.Action("GetBuildsLinkForId", "Repository")',
+                    dataType: 'json',
+                    data: { id: defId },
+                    success: function (result) {
+                        var win = window.open(result.link, '_blank');
+                        win.focus();
+                    }
+                });
+        }
+
+    function VstsAllReleases(defId) {
+        $.ajax({
+            type: 'POST',
+            async: false,
+            url: '@Url.Action("GetReleasesLinkForId", "Repository")',
+                    dataType: 'json',
+                    data: { id: defId },
+                    success: function (result) {
+                        var win = window.open(result.link, '_blank');
+                        win.focus();
+                    }
+                });
+    }
+
+    function FeatureBranchEnded(e) {
+        if (e.type == "update") {
+//            alert("Here");
+            if (e.response.Success) {
+                alert(e.response.Message);
+
+//                var uid = this.element.closest("[data-uid]").data("uid"),
+//                    dataSource = $("#Repos").data("kendoGrid").dataSource,
+//                    item = dataSource.getByUid(uid);
+//                item.dirty = true;
+
+            }
+        }
+    }
+
+    function BranchEnded(e) {
+
+        if (e.type == "destroy") {
+            if (e.response.Success) {
+                alert(e.response.Message);
+            }
+
+        }
+    }
+
+    function RefreshGrid(gridName) {
+        var grid = $('#' + gridName).data("kendoGrid");
+        grid.dataSource.read();
+    }
+
+    function LineItems_Databound(isCurrent, branch) {
+        if (isCurrent) {
+            return "<div style='font-weight: bold'>" + branch + " </div>";
+        }
+        else {
+            return branch;
+        }
+    }
+</script>
+
+<script>
+    $(document).ready(function () {
+
+        var grid = $("#Repos").data("kendoGrid");
+        var wrapper = $('<div class="k-pager-wrap k-grid-pager pagerTop"/>').insertBefore(grid.element.children(".k-grid-header"));
+        grid.pagerTop = new kendo.ui.Pager(wrapper, $.extend({}, grid.options.pageable, { dataSource: grid.dataSource }));
+        grid.element.height("").find(".pagerTop").css("border-width", "0 0 1px 0");
+
+        BuildBuildList();
+        BuildReleaseList();
+
+        SetupSessionUpdater('/Home/KeepSessionAlive');
+
+        function BuildBuildList() {
+            $.ajax({
+                    type: 'GET',
+                    async: true,
+                    url: '@Url.Action("BuildBuildListStatus", "Repository")',
+                    dataType: 'json',
+                    success: function (result) {
+
+                        if (result.Success) {
+                            $("#btnBuilds").removeClass("btn-danger").addClass("btn-info")
+                        }
+                    }
+                });
+        }
+        function BuildReleaseList() {
+            $.ajax({
+                    type: 'GET',
+                    async: true,
+                    url: '@Url.Action("BuildReleaseListStatus", "Repository")',
+                    dataType: 'json',
+                    success: function (result) {
+
+                        if (result.Success) {
+                            $("#btnReleases").removeClass("btn-danger").addClass("btn-info")
+                        }
+                    }
+                });
+        }
+
+        $("#btnFindRepo").click(function () {
+            var searchValue = $('#searchBox').val();
+
+            $("#Repos").data("kendoGrid").dataSource.filter({
+                filters: [
+                    {
+                        field: "Name",
+                        operator: "contains",
+                        value: searchValue
+                    }
+                ]
+            });
+        });
+
+        $("#btnFindPbi").click(function () {
+            var searchValue = $('#pbiBox').val();
+
+        $.ajax({
+            type: 'POST',
+            async: false,
+            url: '@Url.Action("GetWorkItemLink", "Repository")',
+            dataType: 'json',
+            data: { id: searchValue },
+                    success: function (result) {
+                        var win = window.open(result.link, '_blank');
+                        win.focus();
+                    }
+            });
+
+        });
+
+        $("#btnClearFindRepo").click(function () {
+            $("#Repos").data("kendoGrid").dataSource.filter({});
+            $('#searchBox').val('');
+        })
+
+        function AddCallToQueue(fictitousName, repoPosition) {
+            $(document).queue(fictitousName, function () {
+                $.ajax({
+                    type: 'POST',
+                    async: true,
+                    url: '@Url.Action("PullAllRepositories", "Repository")',
+                    dataType: 'json',
+                    data: { pos: repoPosition },
+                    success: function (result) {
+
+                        if (result.Success) {
+                            //do the progress++
+                            // activate the next ajax call when this one finishes
+
+                            var pb = $("#progressBar").data("kendoProgressBar");
+                            pb.value(repoPosition + 1);
+
+                            $(document).dequeue(fictitousName);
+                        }
+                        else {
+                            alert(result.message);
+                            $("#btnPullAll").removeClass("k-state-disabled");
+                            $("#btnBuilds").removeClass("k-state-disabled");
+                            $("#btnReleases").removeClass("k-state-disabled");
+                        }
+
+                        if (repoPosition + 1 == Number(@(ViewBag.RepoCount))) {
+                            $("#btnPullAll").removeClass("k-state-disabled");
+                            $("#btnBuilds").removeClass("k-state-disabled");
+                            $("#btnReleases").removeClass("k-state-disabled");
+                        }
+
+                    }
+                });
+            });
+        }
+
+        $("#btnPullAll").click(function () {
+            if (!$(this).hasClass("k-state-disabled")) {
+                $(this).addClass("k-state-disabled");
+
+                $("#btnBuilds").addClass("k-state-disabled");
+                $("#btnReleases").addClass("k-state-disabled");
+
+                var repoCount = Number(@(ViewBag.RepoCount));
+
+                var pb = $("#progressBar").data("kendoProgressBar");
+                pb.value(0);
+
+                var queue_name = 'temp_queue';
+
+                for (i = 0; i < repoCount; i++) {
+                    AddCallToQueue(queue_name, i)
+                }
+
+                $(document).dequeue(queue_name);
+            }
+        });
+    })
+</script>
+
+<style>
+   .k-tabstrip ul li.k-item, li.k-tabstrip-items {
+       width: 150px;
+    }
+
+    .k-progressbar {
+        width: 100%;
+    }
+
+
+    .checkOut {
+        background-image: none;
+        background-color: #66ce3a !important;
+    }
+
+        .checkOut:hover {
+            background-image: none;
+            background-color: #11aa5f !important;
+        }
+
+    .pullRepo {
+        background-image: none;
+        background-color: #70a3f3 !important;
+    }
+
+        .pullRepo:hover {
+            background-image: none;
+            background-color: #00c9e6 !important;
+        }
+
+    .k-edit-form-container {
+        width: auto;
+    }
+
+    .narrow-input {
+        height: initial;
+        padding: 5px;
+    }
+
+    .narrow-label {
+        padding-top: 4px !important;
+    }
+</style>

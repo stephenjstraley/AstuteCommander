@@ -1,0 +1,68 @@
+﻿<h3>Work Item</h3>
+
+@*<div class="PBIItem">
+    @(
+    Html.Kendo.ToolBar()
+              .Name("PBIToolbar")
+
+    )
+
+
+</div>*@
+<div class="PBIDetails">
+
+</div>
+
+
+<script type="text/x-kendo-template" id="tokentoolbar">
+    <label class="search-label"
+           for="searchBox">PBI #:</label>
+
+    <input type="search"
+           id="searchBox"
+           class="k-textbox"
+           style="width: 200px;" />
+
+    <button type="button"
+            id="btnFindPBI"
+            class="btn btn-info">
+        <i class="fa fa-search"></i>
+    </button>
+
+    <button type="button"
+            id="btnClearFindPBI"
+            class="btn btn-info">
+        <i class="fa fa-eraser"></i>
+    </button>
+
+</script>
+
+<script>
+    $(document).ready(function () {
+
+//        var grid = $("#Repos").data("kendoGrid");
+//        var wrapper = $('<div class="k-pager-wrap k-grid-pager pagerTop"/>').insertBefore(grid.element.children(".k-grid-header"));
+//        grid.pagerTop = new kendo.ui.Pager(wrapper, $.extend({}, grid.options.pageable, { dataSource: grid.dataSource }));
+//        grid.element.height("").find(".pagerTop").css("border-width", "0 0 1px 0");
+
+        $("#btnFindPBI").click(function () {
+            var searchValue = $('#searchBox').val();
+
+            $("#TokensGrid").data("kendoGrid").dataSource.filter({
+                logic: "or",
+
+                filters: [
+                    { field: "Token", operator: "contains", value: searchValue },
+                    { field: "TokenValue", operator: "contains", value: searchValue }
+                ]
+            });
+        });
+
+        $("#btnClearFindPBI").click(function () {
+            $("#TokensGrid").data("kendoGrid").dataSource.filter({});
+            $('#searchBox').val('');
+        })
+
+
+    })
+</script>

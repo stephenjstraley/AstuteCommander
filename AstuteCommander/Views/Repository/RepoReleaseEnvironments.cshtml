@@ -1,0 +1,27 @@
+﻿@using AstuteCommander.Models;
+
+@(
+Html.Kendo()
+    .Grid<RepoReleaseEnvironmentVM>()
+    .Name("releasesenvgrid_" + (string)ViewBag.ReleaseId)
+    .Columns(col =>
+    {
+        col.Bound(c => c.Name).Width(120).Lockable(true);
+        col.Bound(c => c.Id).Visible(false);
+        col.Bound(c => c.DefId).Visible(false);
+        col.Bound(c => c.Rank).Width(60);
+        col.Bound(c => c.DaysToKeep).Title("Keep Days").Width(80);
+        col.Bound(c => c.ReleasesToKeep).Title("Keep Releases").Width(100);
+        col.Bound(c => c.ApplicationDirectory);
+        col.Bound(c => c.AppPoolName);
+        col.Bound(c => c.MachinesList);
+    })
+    .Scrollable()
+    .Selectable()
+    .Resizable(re => re.Columns(true))
+           .DataSource(dataSource => dataSource
+       .Ajax()
+       .Read("GetEnvironmentsForDefinition", "Repository", new { defId = (string)ViewBag.ReleaseId })
+        )
+        
+)

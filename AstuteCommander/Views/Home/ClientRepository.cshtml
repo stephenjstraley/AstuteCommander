@@ -1,0 +1,229 @@
+﻿@using AstuteCommander.Models
+
+<h1>Client Repositories</h1>
+
+<div id="window"></div>
+
+@(
+Html.Kendo()
+    .Grid<AstuteCommander.Models.CosmosAccountsVM>()
+    .Name("CosmosDbAccounts")
+    .Columns(columns =>
+    {
+        columns.Bound(p => p.AccountId).Visible(false);
+        columns.Bound(p => p.Name).Title("Name").Width(175);
+        columns.Bound(p => p.Group).Width(100);
+        columns.Bound(p => p.Endpoint).Width(120);
+        columns.Bound(p => p.PrimaryMasterKey).Width(100);
+    })
+    .Pageable
+        (pageable => pageable
+            .Refresh(true)
+            .PageSizes(new[] { 10, 20, 50, 100 })
+        )
+    .Sortable()
+    .Scrollable(s => s.Height(800))
+    .Filterable()
+    .ClientDetailTemplateId("DBS_GridDetail")
+    .DataSource
+        (dataSource => dataSource
+            .Ajax()
+            .PageSize(50)
+            .Model(m =>
+            {
+                m.Id(p => p.AccountId);
+                m.Field(p => p.Name);
+                m.Field(p => p.Endpoint);
+            }
+            )
+            .Read(read => read.Action("GetCosmosDbAccounts", "Home"))
+        )
+        .Resizable(re => re.Columns(true))
+)
+
+<script id="DBS_GridDetail" type="text/x-kendo-tmpl">
+    @(
+            Html.Kendo()
+              .Grid<CosmosDbAccountDbVM>()
+              .Name("cosmosdbgrid_#=Name#")
+              .Columns(columns =>
+              {
+                  columns.Bound(p => p.DbAccountName).Visible(false);
+                  columns.Bound(p => p.DbName);
+                  columns.Bound(p => p.DbEndpoint).Visible(false);
+                  columns.Bound(p => p.DbPrimaryMasterKey).Visible(false);
+              })
+        .Selectable()
+        .ClientDetailTemplateId("COLS_GridDetail")
+            .DataSource(dataSource => dataSource
+            .Ajax()
+            .Model(m =>
+            {
+                m.Id(p => p.DbName);
+            })
+            //.Read("GetRepoBuildDetails", "Repository", new { id = (string)ViewBag.BuildId })
+            .Read(read => read.Action("GetCosmosDbAccountsDbs", "Home", new { accountName = "#=Name#", ep = "#=Endpoint#", key = "#=PrimaryMasterKey#" }))
+            ).ToClientTemplate()
+    )
+</script>
+
+<script id="COLS_GridDetail" type="text/x-kendo-tmpl">
+    @(
+                    Html.Kendo()
+                      .Grid<CosmosDbAccountDbCollectionVM>()
+                      .Name("cosmosdbcolsgrid_#=DbName#")
+                      .Columns(columns =>
+                      {
+                          columns.Bound(p => p.ColName).Title("Collection Name");
+                          columns.Bound(p => p.DbColAccountName).Visible(false);
+                          columns.Bound(p => p.DbColEndpoint).Visible(false);
+                          columns.Bound(p => p.DbColPrimaryMasterKey).Visible(false);
+                          columns.Bound(p => p.DbColName).Visible(false);
+                      })
+                .Selectable()
+                .ClientDetailTemplateId("Collection_GridDetail")
+                    .DataSource(dataSource => dataSource
+                    .Ajax()
+                    .Model(m =>
+                    {
+                        m.Id(p => p.ColName);
+                    })
+                    .Read(read => read.Action("GetCosmosDbAccountsDbCols", "Home", new { accountName = "#=DbAccountName#", ep = "#=DbEndpoint#", key = "#=DbPrimaryMasterKey#", db = "#=DbName#" }))
+                    ).ToClientTemplate()
+    )
+</script>
+
+<script id="Collection_GridDetail" type="text/x-kendo-tmpl">
+    @(
+                                    Html.Kendo()
+                                      .Grid<CollectionVM>()
+                                      .Name("collectiongrid_#=DbColAccountName#_#=DbColName#_#=ColName#")
+                                      .ToolBar(toolBar => toolBar.ClientTemplate("<button type='button' id='btnDeleteChecked' class='btn btn-danger' onclick='javascript: return SubmitForm(\"collectiongrid_#=DbColAccountName#_#=DbColName#_#=ColName#\");'><i class='fa fa-trash fa-fw'></i>Delete Checked</button>"))
+                                      .Columns(columns =>
+                                      {
+                                          columns.Bound(p => p.Delete).ClientTemplate("<input type='checkbox' style='width:25px;height:25px;'/>").Width(75);
+                                          columns.Bound(p => p.Id).Width(250);
+                                          columns.Bound(p => p.GatewayTimestamp).Width(100);
+                                          columns.Bound(p => p.HubId).Width(100);
+                                          columns.Bound(p => p.DeviceType).Width(100);
+                                          columns.Command(com => com.Custom("ViewTheSource").Text("VIEW").Click("ViewSource")).Width(60);
+                                      })
+                                .Selectable()
+                                    .DataSource(dataSource => dataSource
+                                    .Ajax()
+                                    .Model(m =>
+                                    {
+                                        m.Id(p => p.Id);
+                                    })
+                                    .Read(read => read.Action("GetCollection", "Home", new { ep = "#=DbColEndpoint#", key = "#=DbColPrimaryMasterKey#", db = "#=DbColName#", collection = "#=ColName#" }))
+                                    ).ToClientTemplate()
+    )
+</script>
+
+<script type="text/x-kendo-template" id="collectiontoolbar">
+    <span>#=DbColName#</span>
+    <button type="button"
+            id="btnDeleteChecked"
+            class="btn btn-danger"
+            onclick="javascript: return SubmitForm('collectiongrid_');">
+        <i class="fa fa-trash fa-fw"></i>Delete Checked
+    </button>
+</script>
+
+
+
+<script type="text/javascript">
+
+    function SubmitForm(id) {
+        console.log('[DEBUG]: grid ID is ' + id);
+        var r = confirm("Are you sure you want to mass delete?");
+        if (r == false) {
+            return false;
+        }
+        else {
+            var temp = $("#" + id).data("kendoGrid").dataSource.data();
+
+            var theData = JSON.stringify(temp);
+            console.log('[DEBUG]: data came back as', temp);
+            $.ajax({
+                url: "/Home/DeleteChecked",
+                data: theData,
+                dataType: "json",
+                type: "POST",
+                contentType: 'application/json; charset=utf-8'
+            });
+        }
+
+
+
+
+    }
+
+    function ViewSource(e) {
+        var dataItem = this.dataItem($(e.currentTarget).closest("tr"));
+        var itemId = dataItem.Id;
+        var itemEndpoint = dataItem.ActualEndpoint;
+        var itemKey = dataItem.ActualPrimaryMasterKey;
+        var itemCollection = dataItem.ActualColName;
+        var itemDb = dataItem.ActualDbName;
+
+        //        alert(itemId);
+        //        alert(itemEndpoint);
+
+        var myWindow = $("#window");
+
+        myWindow.kendoWindow({
+            width: "815px",
+            height: "700px",
+            title: itemId,
+            content: {
+                url: "/Home/ViewCosmoseDbSource",
+                data: { id: itemId, endpoint: itemEndpoint, key: itemKey, db: itemDb, collection: itemCollection }
+            }
+        }).data("kendoWindow").center().open();
+    }
+</script>
+
+    <style>
+        .k-tabstrip ul li.k-item, li.k-tabstrip-items {
+            width: 150px;
+        }
+
+        .k-progressbar {
+            width: 100%;
+        }
+
+
+        .checkOut {
+            background-image: none;
+            background-color: #66ce3a !important;
+        }
+
+            .checkOut:hover {
+                background-image: none;
+                background-color: #11aa5f !important;
+            }
+
+        .pullRepo {
+            background-image: none;
+            background-color: #70a3f3 !important;
+        }
+
+            .pullRepo:hover {
+                background-image: none;
+                background-color: #00c9e6 !important;
+            }
+
+        .k-edit-form-container {
+            width: auto;
+        }
+
+        .narrow-input {
+            height: initial;
+            padding: 5px;
+        }
+
+        .narrow-label {
+            padding-top: 4px !important;
+        }
+    </style>

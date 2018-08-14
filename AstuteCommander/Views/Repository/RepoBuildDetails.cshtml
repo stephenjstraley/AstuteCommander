@@ -1,0 +1,45 @@
+﻿@using AstuteCommander.Models
+
+@(
+    Html.Kendo()
+    .Grid<RepoBuildDetailVM>()
+    .Name("BuildDetailGrid_" + (string)ViewBag.BuildId)
+    .ToolBar(toolBar => toolBar.ClientTemplateId("buildgridtoolbar"))
+    .Columns(col =>
+    {
+        col.Bound(c => c.Id).Visible(false);
+        col.Bound(c => c.Build).Width(150);
+        col.Bound(c => c.StartTime).Format("{0:MM-dd-yyyy hh:ss}").Width(100);
+        col.Bound(c => c.EndTime).Format("{0:MM-dd-yyyy hh:ss}").Width(100);
+        col.Bound(c => c.Status).Width(70);
+        col.Bound(c => c.Result).Width(70);
+        col.Command(com => com.Custom("VSTSBuilt").IconClass("fa fa-link fa-fw").Text("VSTS").Click("VstsItemLink").HtmlAttributes(new { @class = "checkOut" })).Width(70);
+    })
+    .Selectable()
+    .DataSource(dataSource => dataSource
+    .Ajax()
+    .Model(m =>
+    {
+        m.Id(p => p.Id);
+        m.Id(p => p.Build);
+    })
+    .Read("GetRepoBuildDetails", "Repository", new { id = (string)ViewBag.BuildId })
+    )
+    .Resizable(re => re.Columns(true))
+    .Scrollable(sc => sc.Height(400))
+
+)
+
+<script type="text/x-kendo-template" id="buildgridtoolbar">
+    <button type="button"
+            id="btnRefreshBuild"
+            onClick="RefreshGrid('BuildDetailGrid_@ViewBag.BuildId')"
+            class="btn btn-info">
+        <i class="fa fa-refresh fa-fw"></i>Refresh
+    </button>
+
+    <button type="button"
+            id="btnVstsBuilds"
+            onclick="VstsAllBuilds(@ViewBag.BuildId)"
+            class="btn btn-info"><i class="fa fa-link fa-fw"></i>VSTS</button>
+</script>

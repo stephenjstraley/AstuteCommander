@@ -1,0 +1,78 @@
+﻿@using AstuteCommander.Models;
+
+@{
+    string theGUid = ViewBag.GUID;
+
+    var currentDiv = "<tr data-uid='#: uid #'>";
+    var notCurrentDiv = "<tr class='k-alt' data-uid='#: uid #'>";
+
+    var conditional =
+"# if (IsCurrentBranch) { # " + currentDiv + "# } else { #" + notCurrentDiv + "# } #</tr>";
+
+}
+
+<div>
+  @(
+    Html.Kendo()
+       .Grid<RepoBranchVM>()
+       .ToolBar(toolBar => toolBar.ClientTemplateId("branchgridtoolbar"))
+       .Name("BranchGrid_" + (string)ViewBag.GUID)
+       .Columns(col =>
+       {
+           col.Bound(c => c.Guid).Visible(false);
+           col.Bound(c => c.Name).Title("Branch").Width(200).MinResizableWidth(150).ClientTemplate("#= LineItems_Databound(IsCurrentBranch, Name)#");
+           col.Bound(c => c.Category).Width(70);
+           col.Bound(c => c.IsLocked).ClientTemplate("#= IsLocked ? 'Yes' : 'No' #").Title("Locked").Width(60);
+           col.Bound(c => c.LockedBy).Width(100);
+           col.Bound(c => c.HasStats).ClientTemplate("#= HasStats ? 'Yes' : 'No' #").Title("Stats").Width(60);
+           col.Command(com => com.Custom("CheckOut").IconClass("fa fa-shopping-cart fa-fw").Text("CkOut").Click("CallForCheckout").HtmlAttributes(new { @class = "checkOut" })).Width(70);
+           col.Command(com => com.Destroy()).Width(60);
+       })
+//       .ClientRowTemplate(@conditional)
+       .Selectable()
+       .ClientDetailTemplateId("Branch_Detail")
+       .Events(ev => ev.DetailInit("initChildGrid").DataBound("LineItems_Databound"))
+       .DataSource(dataSource => dataSource
+           .Ajax()
+           .Events(events => events.RequestEnd("BranchEnded"))
+           .Model(m =>
+           {
+               m.Id(p => p.Guid);
+               m.Id(p => p.Name);
+           })
+           .Read("GetRepoBranches", "Repository", new { id = (string)ViewBag.GUID })
+           .Destroy(de => de.Action("DeleteBranch", "Repository"))
+        )
+        .Resizable(re => re.Columns(true))
+        .Scrollable(sc => sc.Height(400))
+    )
+</div>
+
+<script type="text/x-kendo-template" id="branchgridtoolbar">
+    <button type="button"
+            id="btnRefreshBuild"
+            onClick="RefreshGrid('BranchGrid_@ViewBag.GUID')"
+            class="btn btn-info"><i class="fa fa-refresh fa-fw"></i>Refresh</button>
+</script>
+
+<script id="Branch_Detail" type="text/x-kendo-tmpl">
+  @(
+  Html.Kendo()
+      .Grid<RepoBranchStatusVM>()
+      .Name("BranchStatGrid_#=Guid#")
+       .Columns(col =>
+       {
+           col.Bound(c => c.Id).Width(100);
+           col.Bound(c => c.State).Width(140);
+           col.Bound(c => c.Description).Width(300);
+           col.Bound(c => c.CreatedDate);
+           col.Bound(c => c.CreatedBy);
+       })
+      .AutoBind(false)
+      .DataSource(dataSource => dataSource
+           .Ajax().ServerOperation(false)
+        )
+      .ToClientTemplate()
+  )
+</script>
+

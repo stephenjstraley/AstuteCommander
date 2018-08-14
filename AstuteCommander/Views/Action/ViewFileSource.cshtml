@@ -1,0 +1,25 @@
+﻿@{
+    Layout = "";
+}
+@model AstuteCommander.Models.FileSourceCodeVM;
+
+<h3>@Model.FileName</h3>
+
+@if(!string.IsNullOrEmpty(Model.ErrorMessage)){
+<div class="alert alert-danger">
+    @Model.ErrorMessage
+</div>
+
+} else {
+
+<div id="filesource" style="height: 100%; width: 100%">@Model.SourceCode</div>
+
+<script>
+    var editor = ace.edit("filesource");
+    editor.setTheme("ace/theme/pastel_on_dark");
+    editor.session.setMode("ace/mode/abc");
+    editor.session.setMode("ace/mode/@Model.FileType");
+</script>
+
+}
+

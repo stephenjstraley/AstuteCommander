@@ -1,0 +1,61 @@
+﻿@using AstuteCommander.Classes
+
+@{
+    var auth = Raz.Div("authordata") +
+              Raz.DD("dfasd", "Author", "Author") +
+              Raz.DD("dfdsa", "Date", "AuthorDate") +
+              Raz.Div();
+
+    var comm = Raz.Div("committerdata") +
+               Raz.DD("fdsdg", "Committer", "Committer") +
+               Raz.DD("hgfgh", "Date", "CommitterDate") +
+                 Raz.Div();
+
+    var chg = Raz.Div("changeData") +
+               Raz.DD("qweeqw", "Adds", "Adds") +
+               Raz.DD("hfghfgh", "Edits", "Edits") +
+			   Raz.DD("ljkljk", "Deletes", "Deletes") +
+                 Raz.Div();
+
+}
+
+
+
+<h3>All Last Commits</h3>
+
+@(
+Html.Kendo()
+    .Grid<AstuteCommander.Models.LastCommitsVM>()
+    .Name("AllLastCommitGrid")
+    .ToolBar(toolBar => toolBar.Excel())
+    .Columns(c =>
+    {
+//        c.Bound(p => p.RepoName).Width(100);
+//		c.Bound(p => p.Author).ClientTemplate(@auth).Title("Author").Width(250);
+//		c.Bound(p => p.Committer).ClientTemplate(@comm).Title("Commit").Width(250);
+//		c.Bound(p => p.Comment).Width(200);
+//		c.Bound(p => p.Adds).ClientTemplate(@chg).Title("Chng").Width(40);
+
+        c.Bound(p => p.RepoName).Width(100);
+		c.Bound(p => p.Author);
+		c.Bound(p => p.AuthorDate);
+		c.Bound(p => p.Committer);
+		c.Bound(p => p.CommitterDate);
+		c.Bound(p => p.Comment).Width(200);
+		c.Bound(p => p.Adds);
+		c.Bound(p => p.Edits);
+		c.Bound(p => p.Deletes);
+
+    })
+	.Excel(exc => exc.FileName("Last Commits.xlsx")
+	                 .ProxyURL(Url.Action("Excel_Export_Save", "Action"))
+	      )
+	 .DataSource
+        (dataSource => dataSource
+            .Ajax()
+            //            .PageSize(50)
+            .Read(read => read.Action("GetAllLastCommits", "Action"))
+         )
+        .Resizable(re => re.Columns(true))
+)
+

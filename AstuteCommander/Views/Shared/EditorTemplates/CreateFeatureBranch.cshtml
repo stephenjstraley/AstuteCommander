@@ -1,0 +1,25 @@
+﻿@model AstuteCommander.Models.RepositoryVM
+
+<div class="col-sm-offset-1">
+    <h4>PBI for Feature Branch - ${Name}</h4>
+</div>
+<br />
+@Html.HiddenFor(model => model.Guid)
+@Html.HiddenFor(model => model.Name)
+
+<div class="form-horizontal">
+    <div class="form-group">
+        <lbl for="@Model.PBI" class="col-sm-3 narrow">PBI</lbl>
+        <intbox for="@Model.PBI" width="100" digits="0" class="narrow" />
+    </div>
+
+    <div class="form-group">
+        <lbl for="@Model.OverridingName" class="col-sm-3 narrow">Overriding Name</lbl>
+        <textbox for="@Model.OverridingName" width="385" class="narrow" />
+    </div>
+
+    <div class="form-group">
+        <lbl for="@Model.OverridingName" class="col-sm-3 narrow">Off Release</lbl>
+        <checkbox for="@Model.OffRelease" />
+    </div>
+</div>

@@ -1,0 +1,177 @@
+﻿<h3>Search</h3>
+
+<button type="button"
+        id="btnSetGitBase"
+        class="btn btn-info">
+        <i class="fa fa-gears"></i>
+</button>
+
+
+@(Html.Kendo().ProgressBar()
+              .Name("progressBar")
+              .Min(0)
+              .Max((int)ViewBag.RepoCount)
+              .Type(ProgressBarType.Value)
+              .ShowStatus(false)
+)
+
+@(
+Html.Kendo()
+    .Grid<AstuteCommander.Models.SearchItemsVM>()
+    .Name("SearchGrid")
+    .ToolBar(toolBar => toolBar.ClientTemplateId("searchtoolbar"))
+    .Columns(c =>
+    {
+        //c.Group(gr => gr
+        //  .Title("Repository")
+        //  .Columns(info =>
+        //  {
+        //      info.Bound(xxx => xxx.SourceFile);
+        //  })
+        //  );
+        c.Bound(p => p.Line).Width(40);
+        c.Bound(p => p.Content);
+    })
+    .AutoBind(false)
+    .Groupable(true)
+    .Pageable(pageable => pageable
+                            .Refresh(true)
+                            .PageSizes(new[] { 10, 20, 50, 100, 500, 1000, 2000, 5000, 10000 })
+                        )
+    .DataSource
+        (dataSource => dataSource
+         .Ajax()
+         .PageSize(50)
+         .Group(g => g.Add(c => c.Repository))
+            .Group(g => g.Add(c => c.SourceFile))
+         .Read(read => read.Action("PerformSearch", "Action"))
+         //.ServerOperation(false)
+         .Events(e => e.Error("onError"))
+         )
+        .Resizable(re => re.Columns(true))
+
+)
+
+
+<script type="text/x-kendo-template" id="searchtoolbar">
+    <label class="search-label"
+           for="sourcesearchBox">Find:</label>
+
+    <input type="search"
+           id="sourcesearchBox"
+           class="k-textbox"
+           style="width: 400px;" />
+
+    <button type="button"
+            id="btnSearchSource"
+            class="btn btn-info">
+        <i class="fa fa-search"></i>
+    </button>
+
+    <button type="button"
+            id="btnClearSearchSource"
+            class="btn btn-info">
+        <i class="fa fa-eraser"></i>
+    </button>
+
+    <input type="checkbox" name="wholeword" id="wholeword" style="width: 20px; height: 20px" /><label for="wholeword">Whole Words</label>
+    <input type="checkbox" name="matchcase" id="matchcase" style="width: 20px; height: 20px" /><label for="matchcase">Match Case</label>
+    
+</script>
+
+<script>
+    $(document).ready(function () {
+
+        $("#btnSearchSource").click(function () {
+            var searchValue = $('#sourcesearchBox').val();
+
+            var wholeSource = document.getElementById("wholeword").checked;
+            var matchCase = document.getElementById("matchcase").checked;
+
+            //var grid = $('#' + gridName).data("kendoGrid");
+            var grid = $('#SearchGrid').data("kendoGrid");
+            grid.dataSource.read({ search: searchValue, whole: wholeSource, case: matchCase });
+
+        });
+
+        $("#btnClearSearchSource").click(function () {
+            $('#sourcesearchBox').val('');
+        })
+
+    })
+
+    function AddCallToQueue(fictitousName, repoPosition) {
+        $(document).queue(fictitousName, function () {
+            $.ajax({
+                type: 'POST',
+                async: true,
+                url: '@Url.Action("SetGitBranch", "Action")',
+                dataType: 'json',
+                data: { pos: repoPosition },
+                success: function (result) {
+
+                    if (result.Success) {
+                        //do the progress++
+                        // activate the next ajax call when this one finishes
+
+                        var pb = $("#progressBar").data("kendoProgressBar");
+                        pb.value(repoPosition + 1);
+
+                        $(document).dequeue(fictitousName);
+                    }
+                    else {
+                        alert(result.message);
+                        $("#btnSetGitBase").removeClass("k-state-disabled");
+                    }
+
+                    if (repoPosition + 1 == Number(@(ViewBag.RepoCount))) {
+                        $("#btnSetGitBase").removeClass("k-state-disabled");
+                    }
+
+                }
+            });
+        });
+    }
+
+    $("#btnSetGitBase").click(function () {
+            if (!$(this).hasClass("k-state-disabled")) {
+                $(this).addClass("k-state-disabled");
+
+                var repoCount = Number(@(ViewBag.RepoCount));
+
+                var pb = $("#progressBar").data("kendoProgressBar");
+                pb.value(0);
+
+                var queue_name = 'temp_queue';
+
+                for (i = 0; i < repoCount; i++) {
+                    AddCallToQueue(queue_name, i)
+                }
+
+                $(document).dequeue(queue_name);
+                }
+            });
+
+</script>
+
+<script type="text/javascript">
+    function onError(e) {
+        if (e.errors) {
+            var message = "Errors:\n";
+            $.each(e.errors, function (key, value) {
+                if ('errors' in value) {
+                    $.each(value.errors, function () {
+                        message += this + "\n";
+                    });
+                }
+            });
+            alert(message);
+        }
+    }
+</script>
+
+<style>
+    .k-progressbar {
+        width: 100%;
+    }
+</style>

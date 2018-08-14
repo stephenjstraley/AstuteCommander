@@ -1,0 +1,18 @@
+﻿@model IEnumerable<AstuteCommander.Models.BuildTabVM>
+
+@(
+Html.Kendo()
+.TabStrip()
+.Name("tabstrip_build_" + (string)ViewBag.Guid)
+
+//.Events(es => es.Activate("foo"))
+.Items(j =>
+{
+    foreach(var tab in @Model)
+    {
+        j.Add()
+         .Text(tab.Name)
+         .LoadContentFrom("RepoBuildDetails", "Repository", new { id = tab.Id });
+    }
+})
+)

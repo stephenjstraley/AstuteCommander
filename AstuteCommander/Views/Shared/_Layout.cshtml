@@ -1,0 +1,170 @@
+﻿@using Microsoft.AspNetCore.Http
+@using AstuteCommander.Classes.VSTS;
+
+<!DOCTYPE html>
+<html class="no-js">
+<head>
+    <title>Astute Commander</title>
+
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link href="/css/kendo/kendo.common-material.min.css" rel="stylesheet" type="text/css" />
+    <link href="/css/kendo/kendo.mobile.all.min.css" rel="stylesheet" type="text/css" />
+    <link href="/css/kendo/kendo.material.min.css" rel="stylesheet" type="text/css" />
+    <link href="/lib/bootswatch/spacelab/bootstrap.min.css" rel="stylesheet" type="text/css" />
+    <link href="/lib/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css" />
+
+    <script src="~/js/kendo/jquery.min.js"></script>
+    <script src="~/js/kendo/jszip.min.js"></script>
+    <script src="~/js/kendo/kendo.all.min.js"></script>
+    <script src="~/js/kendo/kendo.aspnetmvc.min.js"></script>
+
+	<script src="~/js/src-min-noconflict/ace.js" type="text/javascript" charset="utf-8"></script>
+
+    <link rel="stylesheet" href="~/css/site.css?" type="text/css" />
+
+</head>
+
+@{
+
+    //    var loggedIn = Context.Session.GetBool(AstuteCommander.Session.LOGGEDIN);
+    var loggedIn = true;
+
+    //var userName = Context.Session.GetString(AstuteCommander.Session.USER);
+    var userName = "Me";
+
+    var projects = Context.Session.GetString(AstuteCommander.Session.PROJECTS);
+
+
+    var projectSelected = !string.IsNullOrEmpty(Context.Session.GetString(AstuteCommander.Session.SELECTED_PROJ));
+}
+
+<body>
+    <div id="sidebar">
+        <div id="logon-header">
+            @if (loggedIn)
+            {
+                <i><span id="userName">@userName</span></i>
+            }
+            else
+            {
+                <i><span id="userName">No User Logged In</span></i>
+            }
+        </div>
+        <nav id="sidebar-wrapper" class="navbar navbar-inverse" role="navigation">
+            @if (loggedIn)
+            {
+                <text>
+            <ul class="nav sidebar">
+                <li><a href="@(Url.Action("ClientRepository", "Home"))"><img src="@Url.Content("~/images/repository.png")">Client Repository</a></li>
+                <li><a href="@(Url.Action("AstuteServers", "Home"))"><img src="@Url.Content("~/images/server-icon.png")">Servers</a></li>
+                <li><a href="@(Url.Action("AstuteLogs", "Home"))"><img src="@Url.Content("~/images/log.png")">Logs</a></li>
+                <li><a href="@(Url.Action("Customers", "Home"))"><img src="@Url.Content("~/images/customers.png")">Customers</a></li>
+                <li><a href="@(Url.Action("Users", "Home"))"><img src="@Url.Content("~/images/users.png")">Users</a></li>
+
+                </ul>
+                </text>
+            }
+        </nav>
+    </div>
+
+    <div id="wrapper">
+        <nav class="navbar navbar-inverse">
+            <div class="container-fluid">
+
+                <ul class="nav navbar-nav navbar-left">
+                    <li>
+                        <button id="menuToggle" class="btn btn-primary">
+                            <i class="fa fa-angle-left"></i>
+                        </button>
+                    </li>
+                </ul>
+
+                <a asp-controller="Home" asp-action="Index" class="navbar-brand">Astute Commander</a>
+
+                @*<div id="menuOptions" class="nav navbar-nav navbar-left">
+                    @if (projectSelected)
+                    {
+                        @(Html.Kendo().Menu()
+                            .Name("actionMenu")
+                            .Items(items =>
+                            {
+                                items.Add().Text("Actions")
+                                .Items(iChild =>
+                                {
+                                    iChild.Add().Text("Inventory").Action("TakeInventory", "Action");
+                                    iChild.Add().Text("All FB's").Action("AllFeatureBranches", "Action");
+                                    iChild.Add().Text("Tokens/Vars").Action("AllTokens", "Action");
+                                    iChild.Add().Text("File Type Search").Action("FileTypeSearchSource", "Action");
+                                    iChild.Add().Text("Source").Action("SearchSource", "Action");
+									iChild.Add().Text("Last Commits").Action("AllLastCommits", "Action");
+                                });
+                            })
+                        )
+                    }
+                </div>*@
+
+                <ul class="nav navbar-nav navbar-right">
+                    @if (loggedIn)
+                            {
+                        <li><a class="btn btn-sm" href="@(Url.Action("Logout", "Auth"))"><i class="fa fa-sign-out"></i>  Logout</a></li>
+                    }
+                    else
+                    {
+                        <li><a class="btn btn-sm" href="@(Url.Action("Login", "Auth"))"><i class="fa fa-sign-in"></i>  Login</a></li>
+                    }
+                </ul>
+
+            </div>
+        </nav>
+        <div id="main" class="container-fluid">
+            @RenderBody()
+        </div>
+    </div>
+
+    <style>
+        .k-grid .k-alt {
+            background-color: paleturquoise; /* specify the alternate background-color */
+        }
+
+        .activity img {
+            width: 20px;
+            height: 20px;
+            vertical-align: middle;
+        }
+
+        .k-flatcolorpicker.k-group, .k-group, .k-menu, .k-menu .k-group, .k-popup.k-widget.k-context-menu {
+            color: #e1dede !important;
+            background-color: transparent !important;
+        }
+
+            .k-menu .k-popup .k-item .k-link {
+                color: white;
+                background-color: #4747ff;
+            }
+
+            /*.k-menu .k-state-hover,
+            .k-menu .k-state-border-down,*/
+            .k-link .k-state-active {
+                background-color: transparent !important;
+                background-image: none !important;
+                color: #515967 !important;
+            }
+
+            /*.k-menu .k-item, .k-menu.k-header, .k-widget.k-menu-horizontal > .k-item {
+                background-color: yellow;
+            }*/
+    </style>
+
+    @*<script type="text/javascript" src="~/js/kendo/jquery.min.js?"></script>
+    <script type="text/javascript" src="~/lib/bootstrap/dist/js/bootstrap.js?"></script>*@
+
+    <script type="text/javascript" src="~/js/site.js"></script>
+
+    @*<script type="text/javascript" src="~/js/kendo/kendo.all.min.js?"></script>
+    <script type="text/javascript" src="~/js/kendo/kendo.aspnetmvc.min.js?"></script>*@
+
+</body>
+</html>
+

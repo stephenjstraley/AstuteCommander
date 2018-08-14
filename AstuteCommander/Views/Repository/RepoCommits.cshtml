@@ -1,0 +1,29 @@
+﻿@using AstuteCommander.Models;
+<div>
+    @(
+    Html.Kendo()
+       .Grid<RepoCommitVM>()
+       .Name("CommitGrid_" + (string)ViewBag.GUID)
+       .Columns(col =>
+       {
+           col.Bound(c => c.Guid);
+           col.Bound(c => c.CommitterDate).Format("{0:yyyy-MM-dd hh:ss}");
+           col.Bound(c => c.Committer);
+           col.Bound(c => c.AuthorDate).Format("{0:yyyy-MM-dd hh:ss}");
+           col.Bound(c => c.Author);
+           col.Bound(c => c.Comment).Width(200);
+       })
+       .Selectable()
+       .DataSource(dataSource => dataSource
+       .Ajax()
+       .Model(m =>
+       {
+           m.Id(p => p.Guid);
+           m.Id(p => p.Comment);
+       })
+       .Read("GetRepoCommits", "Repository", new { id = (string)ViewBag.GUID })
+        )
+        .Resizable(re => re.Columns(true))
+        .Scrollable(sc => sc.Height(400))
+    )
+</div>

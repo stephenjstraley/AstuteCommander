@@ -1,0 +1,25 @@
+﻿@using AstuteCommander.Models;
+<div>
+    @(
+    Html.Kendo()
+       .Grid<RepoPushVM>()
+       .Name("PushGrid_" + (string)ViewBag.GUID)
+       .Columns(col =>
+       {
+           col.Bound(c => c.Id).Visible(false);
+           col.Bound(c => c.PushedBy);
+           col.Bound(c => c.Date).Format("{0:MM-dd-yyyy hh:ss}");
+       })
+       .Selectable()
+       .DataSource(dataSource => dataSource
+       .Ajax()
+       .Model(m =>
+       {
+           m.Id(p => p.Id);
+       })
+       .Read("GetRepoPushes", "Repository", new { id = (string)ViewBag.GUID })
+        )
+        .Resizable(re => re.Columns(true))
+        .Scrollable(sc => sc.Height(400))
+    )
+</div>
