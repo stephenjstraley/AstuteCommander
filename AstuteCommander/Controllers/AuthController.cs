@@ -18,17 +18,18 @@ namespace AstuteCommander.Controllers
 
         public ActionResult Login()
         {
-            return View();
+            Models.LoginVM login = new Models.LoginVM();
+            return View(login);
         }
         public ActionResult Logout()
         {            
             HttpContext.Session.Remove(Session.USER);
-            HttpContext.Session.Remove(Session.TOKEN);
-            HttpContext.Session.Remove(Session.VSTS);
-            HttpContext.Session.Remove(Session.GIT);
-            HttpContext.Session.Remove(Session.PROJECTS);
+            //HttpContext.Session.Remove(Session.TOKEN);
+            //HttpContext.Session.Remove(Session.VSTS);
+            //HttpContext.Session.Remove(Session.GIT);
+            //HttpContext.Session.Remove(Session.PROJECTS);
             HttpContext.Session.Remove(Session.LOGGEDIN);
-            HttpContext.Session.Remove(Session.SELECTED_PROJ);
+            //HttpContext.Session.Remove(Session.SELECTED_PROJ);
 
             return RedirectToAction("Index", "Home");
         }
@@ -48,39 +49,39 @@ namespace AstuteCommander.Controllers
                         {
                             // Set the session stuff up
                             HttpContext.Session.SetString(Session.USER, model.UserName);              //"sstraley1"
-                            HttpContext.Session.SetString(Session.TOKEN, model.PersonalAccessToken);  //"sksf7bfglyb5n65wm7csutpnrmxg4kxwdz7b66v6asazp56pgt7q"
+                            //HttpContext.Session.SetString(Session.TOKEN, model.PersonalAccessToken);  //"sksf7bfglyb5n65wm7csutpnrmxg4kxwdz7b66v6asazp56pgt7q"
 
 
 //                            var root = _env.ContentRootPath + "\\App_data\\" + HttpContext.Session.GetString(Session.USER);
-                            var root = @"C:\vsts";
+                            //var root = @"C:\vsts";
 
-                            var bash = _env.ContentRootPath + "\\App_data\\Git";
+                            //var bash = _env.ContentRootPath + "\\App_data\\Git";
 //                            var bash = @"C:\Program Files\Git\usr\bin";                            
 
-                            HttpContext.Session.SetString(Session.VSTS, root );       //"C:\vsts"
-                            HttpContext.Session.SetString(Session.GIT, bash);     //"C:\Program Files\Git\usr\bin\sh.exe"
+                            //HttpContext.Session.SetString(Session.VSTS, root );       //"C:\vsts"
+                            //HttpContext.Session.SetString(Session.GIT, bash);     //"C:\Program Files\Git\usr\bin\sh.exe"
 
                             // find LOCAL VSTS Folder and if not, then make
-                            if (!System.IO.Directory.Exists(HttpContext.Session.GetString(Session.VSTS)))
-                            {
-                                System.IO.Directory.CreateDirectory(HttpContext.Session.GetString(Session.VSTS));
-                            }
+                            //if (!System.IO.Directory.Exists(HttpContext.Session.GetString(Session.VSTS)))
+                            //{
+                            //    System.IO.Directory.CreateDirectory(HttpContext.Session.GetString(Session.VSTS));
+                            //}
 
                             // find GIT exe file
-                            if (!System.IO.File.Exists(HttpContext.Session.GetString(Session.GIT) + @"\sh.exe"))
-                            {
-                                isLoggedIn = false;
-                                // maybe throw an error
-                            }
+                            //if (!System.IO.File.Exists(HttpContext.Session.GetString(Session.GIT) + @"\sh.exe"))
+                            //{
+                            //    isLoggedIn = false;
+                            //    // maybe throw an error
+                            //}
 
                             // Need this to set stating organization name
-                            Classes.VSTS.Vsts.SetOrg(_settings.Setting.GetSection("Organization").Value);
-                            var tempVsts = new Classes.VSTS.Vsts(HttpContext.Session.GetString(Session.TOKEN));
-                            var projects = tempVsts.GetProjects();
+                            //Classes.VSTS.Vsts.SetOrg(_settings.Setting.GetSection("Organization").Value);
+                            //var tempVsts = new Classes.VSTS.Vsts(HttpContext.Session.GetString(Session.TOKEN));
+                            //var projects = tempVsts.GetProjects();
 
 
-                            if (projects != null)
-                                HttpContext.Session.SetComplexData(Session.PROJECTS, projects);
+                            //if (projects != null)
+                            //    HttpContext.Session.SetComplexData(Session.PROJECTS, projects);
 
                         }
                         catch (System.Exception ex)

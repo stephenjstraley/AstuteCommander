@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp2.0</TargetFramework>
-    <AssemblyName>CooperCommander</AssemblyName>
+    <AssemblyName>AstuteCommander</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>

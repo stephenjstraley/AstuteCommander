@@ -10,17 +10,17 @@ namespace AstuteCommander.Models
         [Required]
         public string Password { get; set; }
 
-        [Required]
-        public string PersonalAccessToken { get; set; }
+        //[Required]
+        //public string PersonalAccessToken { get; set; }
 
-        [Required]
-        public string LocalVSTSFolder { get; set; }
+        //[Required]
+        //public string LocalVSTSFolder { get; set; }
 
-        [Required]
-        public string GitEXEFileLocation { get; set; }
+        //[Required]
+        //public string GitEXEFileLocation { get; set; }
 
-        [Required]
-        public string TempDir { get; set; }
+        //[Required]
+        //public string TempDir { get; set; }
 
     }
 }

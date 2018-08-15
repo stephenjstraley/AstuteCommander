@@ -28,16 +28,16 @@
 
 @{
 
-    //    var loggedIn = Context.Session.GetBool(AstuteCommander.Session.LOGGEDIN);
-    var loggedIn = true;
+    var loggedIn = Context.Session.GetBool(AstuteCommander.Session.LOGGEDIN);
+    //var loggedIn = true;
 
-    //var userName = Context.Session.GetString(AstuteCommander.Session.USER);
-    var userName = "Me";
+    var userName = Context.Session.GetString(AstuteCommander.Session.USER);
+    //var userName = "Me";
 
-    var projects = Context.Session.GetString(AstuteCommander.Session.PROJECTS);
+    //var projects = Context.Session.GetString(AstuteCommander.Session.PROJECTS);
 
 
-    var projectSelected = !string.IsNullOrEmpty(Context.Session.GetString(AstuteCommander.Session.SELECTED_PROJ));
+    //var projectSelected = !string.IsNullOrEmpty(Context.Session.GetString(AstuteCommander.Session.SELECTED_PROJ));
 }
 
 <body>
