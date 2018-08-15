@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc.TagHelpers;
 using System.Threading.Tasks;
 using System;
 
-namespace AstuteCommander.Classes.TagHelpers
+namespace AstuteCommander
 {
     [HtmlTargetElement("lbl", Attributes = ForAttributeName)]
     public class LabelForTagHelper : TagHelper

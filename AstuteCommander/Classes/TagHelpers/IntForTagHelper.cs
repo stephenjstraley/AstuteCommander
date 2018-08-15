@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.AspNetCore.Mvc.TagHelpers;
 using System;
 
-namespace AstuteCommander.Classes.TagHelpers
+namespace AstuteCommander
 {
     // You may need to install the Microsoft.AspNetCore.Razor.Runtime package into your project
     [HtmlTargetElement("intbox", Attributes = ForAttributeName, TagStructure = TagStructure.WithoutEndTag)]

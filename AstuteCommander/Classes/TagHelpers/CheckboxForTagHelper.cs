@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc.ViewFeatures.Internal;
 
 
-namespace AstuteCommander.Classes.TagHelpers
+namespace AstuteCommander
 {
     // You may need to install the Microsoft.AspNetCore.Razor.Runtime package into your project
     [HtmlTargetElement("checkbox", Attributes = ForAttributeName, TagStructure = TagStructure.WithoutEndTag)]

@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.AspNetCore.Mvc.TagHelpers;
 using System;
 
-namespace AstuteCommander.Classes.TagHelpers
+namespace AstuteCommander
 {
     [HtmlTargetElement("password", Attributes = ForAttributeName, TagStructure = TagStructure.WithoutEndTag)]
     public class PasswordBoxForTagHelper : TagHelper

@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.AspNetCore.Razor.TagHelpers;
 using Microsoft.AspNetCore.Mvc.TagHelpers;
 
-namespace AstuteCommander.Classes.TagHelpers
+namespace AstuteCommander
 {
     // You may need to install the Microsoft.AspNetCore.Razor.Runtime package into your project
     [HtmlTargetElement("validate", Attributes = ValidationForAttributeName, TagStructure = TagStructure.NormalOrSelfClosing)]

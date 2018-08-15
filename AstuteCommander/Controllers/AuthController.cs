@@ -101,9 +101,7 @@ namespace AstuteCommander.Controllers
             }
         }
 
-        private bool LogIn(string userName, string password)
-        {
-            return true;
-        }
+        private bool LogIn(string userName, string password) => (userName.ToUpper() == "STEVES" && password.ToUpper() == "KAYPRO10");
+        
     }
 }
