@@ -152,8 +152,30 @@ namespace AstuteCommander.Controllers
         [HttpPost]
         public IActionResult DeleteChecked([FromBody]CollectionVM[] collection)
         {
+            if (collection != null && collection.Length > 0)
+            {
+                var endpoint = collection[0].ActualEndpoint;
+                var key = collection[0].ActualPrimaryMasterKey;
+                var db = collection[0].ActualDbName;
+                var col = collection[0].ActualColName;
 
-            return null;
+                using (var client = new DocumentClient(new System.Uri(endpoint), key))
+                {
+                    foreach (var item in collection)
+                    {
+                        if (item.Delete)
+                        {                            
+                            var foo = client.DeleteDocumentAsync(UriFactory.CreateDocumentUri(db, col, item.Id)).Result;
+                        }
+                    }
+                }
+            }
+
+            //return Redirect(Request.UrlReferrer.ToString());
+            //            return Redirect("~/Home/ClientRepository");
+            //            return RedirectToAction("ClientRepository", "Home");
+            return Json(new { success = true, responseText = "Documents Removed!" });
+
         }
 
 

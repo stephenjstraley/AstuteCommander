@@ -101,7 +101,8 @@ Html.Kendo()
                                       .ToolBar(toolBar => toolBar.ClientTemplate("<button type='button' id='btnDeleteChecked' class='btn btn-danger' onclick='javascript: return SubmitForm(\"collectiongrid_#=DbColAccountName#_#=DbColName#_#=ColName#\");'><i class='fa fa-trash fa-fw'></i>Delete Checked</button>"))
                                       .Columns(columns =>
                                       {
-                                          columns.Bound(p => p.Delete).ClientTemplate("<input type='checkbox' style='width:25px;height:25px;'/>").Width(75);
+                                          columns.Bound(p => p.Delete).ClientTemplate("<input type='checkbox' \\#=Delete ? checked='checked' : '' \\#  onchange='selectChecked(this, \"collectiongrid_#=DbColAccountName#_#=DbColName#_#=ColName#\");'  style='width:25px;height:25px;'/>").Width(75);
+                                          //columns.Bound(p => p.Delete).ClientTemplate("<input type='checkbox' \\#=Delete ? checked='checked' : '' \\#  onchange='selectChecked(this);'  style='width:25px;height:25px;'/>").Width(75);
                                           columns.Bound(p => p.Id).Width(250);
                                           columns.Bound(p => p.GatewayTimestamp).Width(100);
                                           columns.Bound(p => p.HubId).Width(100);
@@ -134,23 +135,65 @@ Html.Kendo()
 
 <script type="text/javascript">
 
+    function selectChecked(sender, gridId) {
+    //function selectChecked(e) {
+
+        //alert(gridId);
+
+
+        //var sel = this.select();
+        //var clo = sel.closest("tr");
+        var grid = $("#" + gridId).data("kendoGrid");
+        var model = grid.dataItem($(event.target).closest("tr"));
+
+        model.Delete = !model.Delete;
+        model.dirty = true;
+//        var theData = grid.dataSource.data();
+//        var selected = grid.select();
+//        var ndx = grid.select().index();
+//        var selectedItem = grid.dataItem(grid.select());
+
+        //var dataItem = this.dataItem($(e).closest("tr"));
+
+
+//        var dataItem = $('#' + gridId).data().kendoGrid.dataSource.data();
+
+//        console.log('[DEBUG]: data is', dataItem);
+
+//        console.log('[DEBUG]: sender is', selectedItem);
+    }
+
     function SubmitForm(id) {
         console.log('[DEBUG]: grid ID is ' + id);
+        var grid = $("#" + id).data("kendoGrid");
+
         var r = confirm("Are you sure you want to mass delete?");
         if (r == false) {
             return false;
         }
         else {
-            var temp = $("#" + id).data("kendoGrid").dataSource.data();
+            var temp = grid.dataSource.data();
 
-            var theData = JSON.stringify(temp);
-            console.log('[DEBUG]: data came back as', temp);
+            var models = [];
+            for (i = 0; i < temp.length; i++) {
+                if (temp[i].Delete) {
+                    models.push(temp[i]);
+                }
+            }
+
+
+            var theData = JSON.stringify(models);
+            console.log('[DEBUG]: data came back as', models);
             $.ajax({
                 url: "/Home/DeleteChecked",
                 data: theData,
                 dataType: "json",
                 type: "POST",
-                contentType: 'application/json; charset=utf-8'
+                contentType: 'application/json; charset=utf-8',
+                success: function (result) {                    
+                    grid.dataSource.read();
+                    alert(result.responseText);
+                }
             });
         }
 
