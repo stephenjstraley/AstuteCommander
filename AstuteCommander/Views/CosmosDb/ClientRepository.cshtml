@@ -36,7 +36,7 @@ Html.Kendo()
                 m.Field(p => p.Endpoint);
             }
             )
-            .Read(read => read.Action("GetCosmosDbAccounts", "Home"))
+            .Read(read => read.Action("GetCosmosDbAccounts", "CosmosDb"))
         )
         .Resizable(re => re.Columns(true))
 )
@@ -62,7 +62,7 @@ Html.Kendo()
                 m.Id(p => p.DbName);
             })
             //.Read("GetRepoBuildDetails", "Repository", new { id = (string)ViewBag.BuildId })
-            .Read(read => read.Action("GetCosmosDbAccountsDbs", "Home", new { accountName = "#=Name#", ep = "#=Endpoint#", key = "#=PrimaryMasterKey#" }))
+            .Read(read => read.Action("GetCosmosDbAccountsDbs", "CosmosDb", new { accountName = "#=Name#", ep = "#=Endpoint#", key = "#=PrimaryMasterKey#" }))
             ).ToClientTemplate()
     )
 </script>
@@ -88,7 +88,7 @@ Html.Kendo()
                     {
                         m.Id(p => p.ColName);
                     })
-                    .Read(read => read.Action("GetCosmosDbAccountsDbCols", "Home", new { accountName = "#=DbAccountName#", ep = "#=DbEndpoint#", key = "#=DbPrimaryMasterKey#", db = "#=DbName#" }))
+                    .Read(read => read.Action("GetCosmosDbAccountsDbCols", "CosmosDb", new { accountName = "#=DbAccountName#", ep = "#=DbEndpoint#", key = "#=DbPrimaryMasterKey#", db = "#=DbName#" }))
                     ).ToClientTemplate()
     )
 </script>
@@ -116,7 +116,7 @@ Html.Kendo()
                                     {
                                         m.Id(p => p.Id);
                                     })
-                                    .Read(read => read.Action("GetCollection", "Home", new { ep = "#=DbColEndpoint#", key = "#=DbColPrimaryMasterKey#", db = "#=DbColName#", collection = "#=ColName#" }))
+                                    .Read(read => read.Action("GetCollection", "CosmosDb", new { ep = "#=DbColEndpoint#", key = "#=DbColPrimaryMasterKey#", db = "#=DbColName#", collection = "#=ColName#" }))
                                     ).ToClientTemplate()
     )
 </script>
@@ -185,7 +185,7 @@ Html.Kendo()
             var theData = JSON.stringify(models);
             console.log('[DEBUG]: data came back as', models);
             $.ajax({
-                url: "/Home/DeleteChecked",
+                url: "/CosmosDb/DeleteChecked",
                 data: theData,
                 dataType: "json",
                 type: "POST",
@@ -220,7 +220,7 @@ Html.Kendo()
             height: "700px",
             title: itemId,
             content: {
-                url: "/Home/ViewCosmoseDbSource",
+                url: "/CosmosDb/ViewCosmoseDbSource",
                 data: { id: itemId, endpoint: itemEndpoint, key: itemKey, db: itemDb, collection: itemCollection }
             }
         }).data("kendoWindow").center().open();
