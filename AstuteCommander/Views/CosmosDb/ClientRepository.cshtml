@@ -121,7 +121,7 @@ Html.Kendo()
     )
 </script>
 
-<script type="text/x-kendo-template" id="collectiontoolbar">
+@*<script type="text/x-kendo-template" id="collectiontoolbar">
     <span>#=DbColName#</span>
     <button type="button"
             id="btnDeleteChecked"
@@ -129,78 +129,55 @@ Html.Kendo()
             onclick="javascript: return SubmitForm('collectiongrid_');">
         <i class="fa fa-trash fa-fw"></i>Delete Checked
     </button>
-</script>
+</script>*@
 
 
 
 <script type="text/javascript">
 
     function selectChecked(sender, gridId) {
-    //function selectChecked(e) {
 
-        //alert(gridId);
-
-
-        //var sel = this.select();
-        //var clo = sel.closest("tr");
         var grid = $("#" + gridId).data("kendoGrid");
         var model = grid.dataItem($(event.target).closest("tr"));
 
         model.Delete = !model.Delete;
         model.dirty = true;
-//        var theData = grid.dataSource.data();
-//        var selected = grid.select();
-//        var ndx = grid.select().index();
-//        var selectedItem = grid.dataItem(grid.select());
-
-        //var dataItem = this.dataItem($(e).closest("tr"));
-
-
-//        var dataItem = $('#' + gridId).data().kendoGrid.dataSource.data();
-
-//        console.log('[DEBUG]: data is', dataItem);
-
-//        console.log('[DEBUG]: sender is', selectedItem);
     }
 
-    function SubmitForm(id) {
-        console.log('[DEBUG]: grid ID is ' + id);
-        var grid = $("#" + id).data("kendoGrid");
+    //function SubmitForm(id) {
+    //    console.log('[DEBUG]: grid ID is ' + id);
+    //    var grid = $("#" + id).data("kendoGrid");
 
-        var r = confirm("Are you sure you want to mass delete?");
-        if (r == false) {
-            return false;
-        }
-        else {
-            var temp = grid.dataSource.data();
+    //    var r = confirm("Are you sure you want to mass delete?");
+    //    if (r == false) {
+    //        return false;
+    //    }
+    //    else {
+    //        var temp = grid.dataSource.data();
 
-            var models = [];
-            for (i = 0; i < temp.length; i++) {
-                if (temp[i].Delete) {
-                    models.push(temp[i]);
-                }
-            }
-
-
-            var theData = JSON.stringify(models);
-            console.log('[DEBUG]: data came back as', models);
-            $.ajax({
-                url: "/CosmosDb/DeleteChecked",
-                data: theData,
-                dataType: "json",
-                type: "POST",
-                contentType: 'application/json; charset=utf-8',
-                success: function (result) {                    
-                    grid.dataSource.read();
-                    alert(result.responseText);
-                }
-            });
-        }
+    //        var models = [];
+    //        for (i = 0; i < temp.length; i++) {
+    //            if (temp[i].Delete) {
+    //                models.push(temp[i]);
+    //            }
+    //        }
 
 
-
-
-    }
+    //        var theData = JSON.stringify(models);
+    //        console.log('[DEBUG]: data came back as', models);
+    //        $.ajax({
+    //            url: "/CosmosDb/DeleteChecked",
+    //            data: theData,
+    //            dataType: "json",
+    //            type: "POST",
+    //            contentType: 'application/json; charset=utf-8',
+    //            success: function (result) {                    
+    //                grid.dataSource.read();
+    //                alert(result.responseText);
+    //            }
+    //        });
+    //    }
+    //}
 
     function ViewSource(e) {
         var dataItem = this.dataItem($(e.currentTarget).closest("tr"));

@@ -407,7 +407,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\Astute.Data.Services\Astute.Data.Services\Astute.Data.Services.csproj" />
+    <ProjectReference Include="..\..\Astute.Data.Models\Astute.Data.Models\Astute.Data.Models.csproj" />
+    <ProjectReference Include="..\..\Astute.Data.Services\Astute.Data.Services\Astute.Data.Services.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -2,13 +2,14 @@
 
 <h1>Customers</h1>
 
+<div id="window"></div>
 
 @(
 Html.Kendo()
     .Grid<Astute.Data.Models.Old.Entities.companies>()
     //.Grid<AstuteCommander.Models.BMRVM>()
     .Name("Companies")
-//    .ToolBar(toolBar => toolBar.ClientTemplateId("maingridtoolbar"))
+    //.ToolBar(toolBar => toolBar.ClientTemplateId("customerToolbar"))
     .Columns(columns =>
     {
         columns.Bound(p => p.id).Visible(false);
@@ -16,11 +17,20 @@ Html.Kendo()
         columns.Bound(p => p.server_token).Visible(false);
         columns.Bound(p => p.company_id).Title("ID").Width(75);
         columns.Bound(p => p.company).Title("Company").Width(75);
-        //columns.Bound(p => p.DefaultBranch).ClientTemplate(@col).Title(" ").Width(400);
-        //columns.Bound(p => p.DirectoryOnDisk).ClientTemplate(@conditional).Title(" ").Width(40);
-        //columns.Command(com => com.Custom("PullIndividualRepo").IconClass("fa fa-download fa-fw").Text(" ").Click("CallForPull").HtmlAttributes(new { @class = "pullRepo" })).Width(55);
-        //columns.Command(com => com.Custom("DeleteIndividualRepo").IconClass("fa fa-code fa-fw").Text(" ").Click("CallToDelete").HtmlAttributes(new { @class = "pullRepo" })).Width(55);
-        //columns.Command(com => com.Edit().Text("FB")).Width(55);
+        //columns.Bound(p => p.care_guardian).Title("CG").ClientTemplate("<input type='checkbox' \\#=care_guardian ? checked='checked' : '' disabled='disabled' style='width:25px;height:25px;'/>").Width(75);
+        //columns.Bound(p => p.comfort_guardian).Title("ComG").ClientTemplate("<input type='checkbox' \\#=comfort_guardian ? checked='checked' : '' disabled='disabled' style='width:25px;height:25px;'/>").Width(75);
+        //columns.Bound(p => p.data_guardian).Title("DG").ClientTemplate("<input type='checkbox' \\#=data_guardian ? checked='checked' : '' disabled='disabled' style='width:25px;height:25px;'/>").Width(75);
+        //columns.Bound(p => p.tele_guardian).Title("TG").ClientTemplate("<input type='checkbox' \\#=tele_guardian ? checked='checked' : '' disabled='disabled' style='width:25px;height:25px;'/>").Width(75);
+        //columns.Bound(p => p.manual_entry).Title("ME").ClientTemplate("<input type='checkbox' \\#=manual_entry ? checked='checked' : '' disabled='disabled' style='width:25px;height:25px;'/>").Width(75);
+        //columns.Bound(p => p.status).Title("Status").ClientTemplate("<input type='checkbox' \\#=status ? checked='checked' : '' disabled='disabled' style='width:25px;height:25px;'/>").Width(75);
+
+        columns.Bound(p => p.care_guardian).Title("CG").Width(75);
+        columns.Bound(p => p.comfort_guardian).Title("ComG").Width(75);
+        columns.Bound(p => p.data_guardian).Title("DG").Width(75);
+        columns.Bound(p => p.tele_guardian).Title("TG").Width(75);
+        columns.Bound(p => p.manual_entry).Title("ME").Width(75);
+        columns.Bound(p => p.status).Title("Status").Width(75);
+        columns.Command(com => com.Custom("ViewRecord").Text("VIEW").Click("ViewRecord")).Width(60);
     })
     .Pageable
         (pageable => pageable
@@ -32,7 +42,7 @@ Html.Kendo()
     .Scrollable(s => s.Height(800))
     .Filterable()
     .AllowCopy(true)
-    //.ClientDetailTemplateId("Repo_TabDetail")
+    .ClientDetailTemplateId("CustomerTabDetail")
     .DataSource
         (dataSource => dataSource
             .Ajax()
@@ -52,92 +62,24 @@ Html.Kendo()
 )
 
 <script type="text/x-kendo-template" id="maingridtoolbar">
-    <button type="button"
-            id="btnBuilds"
-            onclick="location.href='@Url.Action("RebuildBuildDefinitions", "Repository")'"
-            class="btn btn-danger">
-        <i class="fa fa-tasks fa-fw"></i>BDL
-    </button>
-
-    <button type="button"
-            id="btnReleases"
-            onclick="location.href='@Url.Action("RebuildReleaseDefinitions", "Repository")'"
-            class="btn btn-danger">
-        <i class="fa fa-tasks fa-fw"></i>RDL
-    </button>
-
-    <label class="search-label"
-           for="searAchBox">Find:</label>
-
-    <input type="search"
-           id="searchBox"
-           class="k-textbox"
-           style="width: 200px;" />
-
-    <button type="button"
-            id="btnFindRepo"
-            class="btn btn-info">
-        <i class="fa fa-search"></i>
-    </button>
-
-    <button type="button"
-            id="btnClearFindRepo"
-            class="btn btn-info">
-        <i class="fa fa-eraser"></i>
-    </button>
-
-
-
-
-
-    <label class="search-label"
-           for="PbiBox">PBI:</label>
-
-    <input type="search"
-           id="pbiBox"
-           class="k-textbox"
-           style="width: 200px;" />
-
-    <button type="button"
-            id="btnFindPbi"
-            class="btn btn-info">
-        <i class="fa fa-search"></i>
-    </button>
-
-
-
-
-
-    @*<button type="button"
-        id="btnRefreshRepos"
-        onClick="RefreshGrid('Repos')"
-        class="btn btn-info"><i class="fa fa-refresh fa-fw"></i>Refresh</button>*@
-
-    <button type="button"
-            id="btnPullAll"
-            style="float: right;"
-            class="btn btn-info">
-        <i class="fa fa-download fa-fw"></i>Pull All
-    </button>
 </script>
 
-<script id="Repo_TabDetail" type="text/x-kendo-tmpl">
+<script id="CustomerTabDetail" type="text/x-kendo-tmpl">
     @(
     Html.Kendo()
       .TabStrip()
-      .Name("tabstrip_#=Guid#")
-      .Events(events => events.Select("onSelect")
-                              .ContentLoad("contentLoaded")
-                              .Activate("activated")
-              )
+      .Name("tabstrip_#=token#")
+      //.Events(events => events.Select("onSelect")
+      //                        .ContentLoad("contentLoaded")
+      //                        .Activate("activated")
+      //        )
       .Items(i =>
       {
-          i.Add().Text("Branches").LoadContentFrom("RepoBranches", "Repository", new { id = "#=Guid#" });
-          i.Add().Text("Commits").LoadContentFrom("RepoCommits", "Repository", new { id = "#=Guid#" });
-          i.Add().Text("Pull Requests").LoadContentFrom("RepoPullRequests", "Repository", new { id = "#=Guid#" });
-          i.Add().Text("Pushes").LoadContentFrom("RepoPushes", "Repository", new { id = "#=Guid#" });
-          i.Add().Text("Builds").LoadContentFrom("RepoBuilds", "Repository", new { id = "#=Guid#" });
-          i.Add().Text("Releases").LoadContentFrom("RepoReleases", "Repository", new { id = "#=Guid#" });
+          i.Add().Text("Hubs").LoadContentFrom("CustomerHubs", "Customers", new { id = "#=token#" });
+          i.Add().Text("Users").LoadContentFrom("CustomerUsers", "Customers", new { id = "#=token#" });
+          i.Add().Text("Caregivers").LoadContentFrom("CustomerCaregivers", "Customers", new { id = "#=token#" });
+          i.Add().Text("Patients").LoadContentFrom("CustomerPatients", "Customers", new { id = "#=token#" });
+          i.Add().Text("Repository").LoadContentFrom("CustomerRepository", "Customers", new { id = "#=token#" });
 
       }).ToClientTemplate()
     )
@@ -149,6 +91,25 @@ Html.Kendo()
     var keepSessionAlive = true;
     var actionUrl = null;
 
+    function ViewRecord(e) {
+        var dataItem = this.dataItem($(e.currentTarget).closest("tr"));
+        var datatoken = dataItem.token;
+
+        //        alert(itemId);
+        //        alert(itemEndpoint);
+
+        var myWindow = $("#window");
+
+        myWindow.kendoWindow({
+            width: "815px",
+            height: "700px",
+            title: "Company Details",
+            content: {
+                url: "/Customers/ViewCustomerDetails",
+                data: { token: datatoken }
+            }
+        }).data("kendoWindow").center().open();
+    }
     //function SetupSessionUpdater(url) {
     //    actionUrl = url;
     //    var container = $("#body");
@@ -369,8 +330,8 @@ Html.Kendo()
         grid.pagerTop = new kendo.ui.Pager(wrapper, $.extend({}, grid.options.pageable, { dataSource: grid.dataSource }));
         grid.element.height("").find(".pagerTop").css("border-width", "0 0 1px 0");
 
-        BuildBuildList();
-        BuildReleaseList();
+        //BuildBuildList();
+        //BuildReleaseList();
 
         SetupSessionUpdater('/Home/KeepSessionAlive');
 
