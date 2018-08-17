@@ -1,0 +1,422 @@
+﻿@using AstuteCommander.Classes
+
+<h1>Customers</h1>
+
+
+@(
+Html.Kendo()
+    .Grid<Astute.Data.Models.Old.Entities.companies>()
+    //.Grid<AstuteCommander.Models.BMRVM>()
+    .Name("Companies")
+//    .ToolBar(toolBar => toolBar.ClientTemplateId("maingridtoolbar"))
+    .Columns(columns =>
+    {
+        columns.Bound(p => p.id).Visible(false);
+        columns.Bound(p => p.token).Visible(false);
+        columns.Bound(p => p.server_token).Visible(false);
+        columns.Bound(p => p.company_id).Title("ID").Width(75);
+        columns.Bound(p => p.company).Title("Company").Width(75);
+        //columns.Bound(p => p.DefaultBranch).ClientTemplate(@col).Title(" ").Width(400);
+        //columns.Bound(p => p.DirectoryOnDisk).ClientTemplate(@conditional).Title(" ").Width(40);
+        //columns.Command(com => com.Custom("PullIndividualRepo").IconClass("fa fa-download fa-fw").Text(" ").Click("CallForPull").HtmlAttributes(new { @class = "pullRepo" })).Width(55);
+        //columns.Command(com => com.Custom("DeleteIndividualRepo").IconClass("fa fa-code fa-fw").Text(" ").Click("CallToDelete").HtmlAttributes(new { @class = "pullRepo" })).Width(55);
+        //columns.Command(com => com.Edit().Text("FB")).Width(55);
+    })
+    .Pageable
+        (pageable => pageable
+            .Refresh(true)
+            .PageSizes(new[] { 10, 20, 50, 100 })
+        )
+    //.Editable(e => e.Mode(GridEditMode.PopUp).TemplateName("CreateFeatureBranch").Window(w => w.Width(600).Title("Create")))
+    .Sortable()
+    .Scrollable(s => s.Height(800))
+    .Filterable()
+    .AllowCopy(true)
+    //.ClientDetailTemplateId("Repo_TabDetail")
+    .DataSource
+        (dataSource => dataSource
+            .Ajax()
+            .PageSize(50)
+            //            .Events(events => events.RequestEnd("FeatureBranchEnded"))
+            .Model(m =>
+            {
+                //m.Id(p => p.id);
+                //m.Field(p => p.token);
+                //m.Field(p => p.server_token);
+            }
+            )
+            .Read(read => read.Action("GetCustomers", "Customers"))
+        //            .Update(up => up.Action("MakeFeatureBranch", "Repository"))
+        )
+        .Resizable(re => re.Columns(true))
+)
+
+<script type="text/x-kendo-template" id="maingridtoolbar">
+    <button type="button"
+            id="btnBuilds"
+            onclick="location.href='@Url.Action("RebuildBuildDefinitions", "Repository")'"
+            class="btn btn-danger">
+        <i class="fa fa-tasks fa-fw"></i>BDL
+    </button>
+
+    <button type="button"
+            id="btnReleases"
+            onclick="location.href='@Url.Action("RebuildReleaseDefinitions", "Repository")'"
+            class="btn btn-danger">
+        <i class="fa fa-tasks fa-fw"></i>RDL
+    </button>
+
+    <label class="search-label"
+           for="searAchBox">Find:</label>
+
+    <input type="search"
+           id="searchBox"
+           class="k-textbox"
+           style="width: 200px;" />
+
+    <button type="button"
+            id="btnFindRepo"
+            class="btn btn-info">
+        <i class="fa fa-search"></i>
+    </button>
+
+    <button type="button"
+            id="btnClearFindRepo"
+            class="btn btn-info">
+        <i class="fa fa-eraser"></i>
+    </button>
+
+
+
+
+
+    <label class="search-label"
+           for="PbiBox">PBI:</label>
+
+    <input type="search"
+           id="pbiBox"
+           class="k-textbox"
+           style="width: 200px;" />
+
+    <button type="button"
+            id="btnFindPbi"
+            class="btn btn-info">
+        <i class="fa fa-search"></i>
+    </button>
+
+
+
+
+
+    @*<button type="button"
+        id="btnRefreshRepos"
+        onClick="RefreshGrid('Repos')"
+        class="btn btn-info"><i class="fa fa-refresh fa-fw"></i>Refresh</button>*@
+
+    <button type="button"
+            id="btnPullAll"
+            style="float: right;"
+            class="btn btn-info">
+        <i class="fa fa-download fa-fw"></i>Pull All
+    </button>
+</script>
+
+<script id="Repo_TabDetail" type="text/x-kendo-tmpl">
+    @(
+    Html.Kendo()
+      .TabStrip()
+      .Name("tabstrip_#=Guid#")
+      .Events(events => events.Select("onSelect")
+                              .ContentLoad("contentLoaded")
+                              .Activate("activated")
+              )
+      .Items(i =>
+      {
+          i.Add().Text("Branches").LoadContentFrom("RepoBranches", "Repository", new { id = "#=Guid#" });
+          i.Add().Text("Commits").LoadContentFrom("RepoCommits", "Repository", new { id = "#=Guid#" });
+          i.Add().Text("Pull Requests").LoadContentFrom("RepoPullRequests", "Repository", new { id = "#=Guid#" });
+          i.Add().Text("Pushes").LoadContentFrom("RepoPushes", "Repository", new { id = "#=Guid#" });
+          i.Add().Text("Builds").LoadContentFrom("RepoBuilds", "Repository", new { id = "#=Guid#" });
+          i.Add().Text("Releases").LoadContentFrom("RepoReleases", "Repository", new { id = "#=Guid#" });
+
+      }).ToClientTemplate()
+    )
+</script>
+
+<script type="text/javascript">
+    var contentBuild = false;
+    var contentRelease = false;
+    var keepSessionAlive = true;
+    var actionUrl = null;
+
+    //function SetupSessionUpdater(url) {
+    //    actionUrl = url;
+    //    var container = $("#body");
+    //    container.mousemove(function () { keepSessionAlive = true; });
+    //    container.keydown(function () { keepSessionAlive = true; });
+    //    CheckToKeepSessionAlive();
+    //}
+
+    //function CheckToKeepSessionAlive() {
+    //    setTimeout("KeepSessionAlive()", 100000);
+    //}
+
+    //function KeepSessionAlive() {
+    //    if (keepSessionAlive && actionUrl != null) {
+    //        $.ajax({
+    //            type: "POST",
+    //            url: actionUrl,
+    //            success: function () { keepSessionAlive = true; }
+    //        });
+    //    }
+    //    CheckToKeepSessionAlive();
+    //}
+
+    //function initChildGrid(e) {
+    //    var detailGrid = e.detailCell.find('>.k-grid').data().kendoGrid;
+    //    var dataItem = e.data;
+    //    detailGrid.dataSource.data(dataItem.Statuses);
+    //}
+
+    //function contentLoaded(e) {
+    //    var item = $(e.item).find("> .k-link").text();
+    //    if (contentBuild || contentRelease) {
+    //        kendo.ui.progress($(e.item), false);
+    //    }
+    //    if (item == "Builds" || item == "Releases") {
+    //        if (item == "Builds") {
+    //            contentBuild = true;
+    //        }
+    //        else {
+    //            contentRelease = true;
+    //        }
+
+    //        kendo.ui.progress($(e.item), false);
+    //    }
+    //}
+
+    //function activated(e) {
+    //    var item = $(e.item).find("> .k-link").text();
+    //    if (item == "Builds" || item == "Releases") {
+    //        kendo.ui.progress($(e.item), false);
+    //    }
+
+    //}
+
+    //function onSelect(e) {
+    //    var item = $(e.item).find("> .k-link").text();
+    //    if (item == "Builds" || item == "Releases") {
+    //        kendo.ui.progress($(e.item), true);
+    //    }
+    //}
+
+    //function CallForPull(e) {
+
+    //    var dataItem = this.dataItem($(e.currentTarget).closest("tr"));
+
+    //    var guid = dataItem.Guid;
+
+    //    $.post('/Repository/PullRepository', { 'guid': guid }, function (d) {
+    //        alert(d.Message);
+    //        if (d.Success) {
+    //            dataItem.DirectoryOnDisk = true;
+
+    //            var grid = $("#Repos").data("kendoGrid");
+    //            grid.refresh();
+
+    //        }
+    //    }, 'json');
+
+    //}
+
+    //function CallToDelete(e) {
+
+    //    var dataItem = this.dataItem($(e.currentTarget).closest("tr"));
+    //    var uid = dataItem.uid;
+    //    var row = $("#Repos").data("kendoGrid").table.find('tr[data-id="' + uid + '"]');
+
+
+    //    $.post('/Repository/RemoveRepository', { 'guid': dataItem.Guid }, function (d) {
+    //        alert(d.Message);
+    //        if (d.Success) {
+    //            dataItem.DirectoryOnDisk = false;
+
+
+    //            var grid = $("#Repos").data("kendoGrid");
+    //            grid.refresh();
+
+    //            $("#Repos").select(row);
+
+    //            var oldrow = $("#Repos").data("kendoGrid").table.find('tr[data-id="' + uid + '"]');
+
+
+    //            oldrow.addClass('k-state-selected');
+    //        }
+    //    }, 'json');
+    //}
+
+    //function CreateBMRTemplate(e) {
+
+    //    var dataItem = this.dataItem($(e.currentTarget).closest("tr"));
+
+    //    var id = dataItem.Id;
+
+    //    $.post('/Repository/CreateBMR', { 'guid': id }, function (d) {
+
+    //    }, 'json');
+
+    //    alert(id);
+    //}
+
+
+
+    //function kendoFastRedrawRow(grid, row) {
+    //    var dataItem = grid.dataItem(row);
+
+    //    var rowChildren = $(row).children('td[role="gridcell"]');
+
+    //    for (var i = 0; i < grid.columns.length; i++) {
+
+    //        var column = grid.columns[i];
+    //        var template = column.template;
+    //        var cell = rowChildren.eq(i);
+
+    //        if (template !== undefined) {
+    //            var kendoTemplate = kendo.template(template);
+
+    //            // Render using template
+    //            cell.html(kendoTemplate(dataItem));
+    //        } else {
+    //            var fieldValue = dataItem[column.field];
+
+    //            var format = column.format;
+    //            var values = column.values;
+
+    //            if (values !== undefined && values != null) {
+    //                // use the text value mappings (for enums)
+    //                for (var j = 0; j < values.length; j++) {
+    //                    var value = values[j];
+    //                    if (value.value == fieldValue) {
+    //                        cell.html(value.text);
+    //                        break;
+    //                    }
+    //                }
+    //            } else if (format !== undefined) {
+    //                // use the format
+    //                cell.html(kendo.format(format, fieldValue));
+    //            } else {
+    //                // Just dump the plain old value
+    //                cell.html(fieldValue);
+    //            }
+    //        }
+    //    }
+    //}
+    //function CallForCheckout(e) {
+
+    //    var dataItem = this.dataItem($(e.currentTarget).closest("tr"));
+
+    //    var name = dataItem.Name;
+    //    var guid = dataItem.RepoGuid;
+
+    //    $.post('/Repository/CheckOutBranch', { 'name': name, 'guid': guid }, function (d) {
+    //        alert(d.Message);
+    //    }, 'json');
+    //}
+
+    @*function VstsItemLink(e) {
+        var dataItem = this.dataItem($(e.currentTarget).closest("tr"));
+        var link = dataItem.VstsLink;
+
+        var win = window.open(link, '_blank');
+        win.focus();
+    }
+
+    function VstsAllBuilds(defId) {
+        $.ajax({
+            type: 'POST',
+            async: false,
+            url: '@Url.Action("GetBuildsLinkForId", "Repository")',
+                    dataType: 'json',
+                    data: { id: defId },
+                    success: function (result) {
+                        var win = window.open(result.link, '_blank');
+                        win.focus();
+                    }
+                });
+        }*@
+
+    @*function VstsAllReleases(defId) {
+        $.ajax({
+            type: 'POST',
+            async: false,
+            url: '@Url.Action("GetReleasesLinkForId", "Repository")',
+                    dataType: 'json',
+                    data: { id: defId },
+                    success: function (result) {
+                        var win = window.open(result.link, '_blank');
+                        win.focus();
+                    }
+                });
+    }*@
+
+</script>
+
+<script>
+    $(document).ready(function () {
+
+        var grid = $("#Repos").data("kendoGrid");
+        var wrapper = $('<div class="k-pager-wrap k-grid-pager pagerTop"/>').insertBefore(grid.element.children(".k-grid-header"));
+        grid.pagerTop = new kendo.ui.Pager(wrapper, $.extend({}, grid.options.pageable, { dataSource: grid.dataSource }));
+        grid.element.height("").find(".pagerTop").css("border-width", "0 0 1px 0");
+
+        BuildBuildList();
+        BuildReleaseList();
+
+        SetupSessionUpdater('/Home/KeepSessionAlive');
+
+    })
+</script>
+
+<style>
+   .k-tabstrip ul li.k-item, li.k-tabstrip-items {
+       width: 150px;
+    }
+
+    .k-progressbar {
+        width: 100%;
+    }
+
+
+    .checkOut {
+        background-image: none;
+        background-color: #66ce3a !important;
+    }
+
+        .checkOut:hover {
+            background-image: none;
+            background-color: #11aa5f !important;
+        }
+
+    .pullRepo {
+        background-image: none;
+        background-color: #70a3f3 !important;
+    }
+
+        .pullRepo:hover {
+            background-image: none;
+            background-color: #00c9e6 !important;
+        }
+
+    .k-edit-form-container {
+        width: auto;
+    }
+
+    .narrow-input {
+        height: initial;
+        padding: 5px;
+    }
+
+    .narrow-label {
+        padding-top: 4px !important;
+    }
+</style>

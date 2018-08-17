@@ -11,6 +11,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		NuGet.Config = NuGet.Config
 	EndProjectSection
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Astute.Data.Models", "..\..\Astute.Data.Models\Astute.Data.Models\Astute.Data.Models.csproj", "{6388D481-4BE1-4AE4-97C7-B92B1E432DEA}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Astute.Data.Services", "..\..\Astute.Data.Services\Astute.Data.Services\Astute.Data.Services.csproj", "{04273CFA-5503-49CC-A0FD-94C170CD5DAE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +25,14 @@ Global
 		{9F649FF0-91ED-480C-94FC-89BF5814C7D0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9F649FF0-91ED-480C-94FC-89BF5814C7D0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9F649FF0-91ED-480C-94FC-89BF5814C7D0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6388D481-4BE1-4AE4-97C7-B92B1E432DEA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6388D481-4BE1-4AE4-97C7-B92B1E432DEA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6388D481-4BE1-4AE4-97C7-B92B1E432DEA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6388D481-4BE1-4AE4-97C7-B92B1E432DEA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{04273CFA-5503-49CC-A0FD-94C170CD5DAE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{04273CFA-5503-49CC-A0FD-94C170CD5DAE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{04273CFA-5503-49CC-A0FD-94C170CD5DAE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{04273CFA-5503-49CC-A0FD-94C170CD5DAE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
